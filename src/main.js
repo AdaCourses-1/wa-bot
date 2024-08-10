@@ -46,7 +46,6 @@ const processQueue = async (groupId) => {
 
     try {
       await onMessageCreated(msg);
-      await delay(2500); // Интервал 15 секунд между сообщениями одной группы
     } catch (err) {
       console.error("Ошибка при обработке сообщения:", err);
     }
@@ -58,7 +57,7 @@ const processQueue = async (groupId) => {
   // Сбрасываем флаг обработки
   processing = false;
 
-  await delay(30000); 
+  await delay(20000); 
 
   // Обрабатываем следующую очередь
   processNextQueue();
