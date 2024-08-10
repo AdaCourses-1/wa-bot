@@ -4,15 +4,6 @@ const { CLIENT_EVENTS, DB_PATHS } = require("./const");
 const { CLIENT } = require("./config");
 const { saveCacheToFile } = require("./saveGroups");
 
-const express = require('express');
-const app = express();
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-
 const listGroups = async () => {
   try {
     const chats = await CLIENT.getChats();
