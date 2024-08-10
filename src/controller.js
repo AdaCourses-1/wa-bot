@@ -59,9 +59,11 @@ const sendToDestChats = async (data) => {
 };
 
 const onMessageCreated = async (msg) => {
-  if (msg.fromMe) return;
+  // if (msg.fromMe) return;
 
   const chat = await msg.getChat();
+
+  console.log('Контент из WA:', msg.body)
 
   const isSourceChat = sourceChats.includes(chat.id._serialized);
 
