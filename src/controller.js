@@ -134,7 +134,7 @@ const onMessageCreated = async (msg) => {
     if (!isProcessing) {
       processQueue();
     }
-  }, 15000);
+  }, 10000);
 };
 
 module.exports = { onMessageCreated };

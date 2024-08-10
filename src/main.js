@@ -57,7 +57,7 @@ const processQueue = async (groupId) => {
   // Сбрасываем флаг обработки
   processing = false;
 
-  await delay(20000); 
+  await delay(5000); 
 
   // Обрабатываем следующую очередь
   processNextQueue();
