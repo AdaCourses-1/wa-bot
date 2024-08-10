@@ -2,14 +2,16 @@ const { ChatTypes } = require("whatsapp-web.js");
 const { CLIENT } = require("./config");
 const { BOT_SETTINGS_GROUP, COMMANDS, DB_PATHS } = require("./const");
 const { loadCacheFromFile, saveCacheToFile } = require("./saveGroups");
+const {
+  destChats,
+  sourceChats,
+  generateUniqueId,
+  fileSizeInMb,
+  isVideoOrImage,
+} = require("./utils");
 
-const destChats = loadCacheFromFile(DB_PATHS.BOT_SETTINGS)?.dest_chats || [];
-const sourceChats =
-  loadCacheFromFile(DB_PATHS.BOT_SETTINGS)?.source_chats || [];
-
-const fileSizeInMb = (fileSize) => fileSize / 1024 / 1024 || 0;
-const isVideoOrImage = (mediaType) =>
-  mediaType?.startsWith("image/") || mediaType?.startsWith("video/");
+const messageQueue = [];
+let isProcessing = false;
 
 const botSettingsActions = async (msg) => {
   const command = await msg.body;
@@ -48,6 +50,9 @@ const botSettingsActions = async (msg) => {
       saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
     }
   }
+
+  // Обязательно сбрасывайте isProcessing и продолжайте обработку очереди
+  isProcessing = false;
 };
 
 const sendToDestChats = async (data) => {
@@ -58,23 +63,19 @@ const sendToDestChats = async (data) => {
   }
 };
 
-const onMessageCreated = async (msg) => {
+const processQueue = async () => {
+  if (isProcessing || messageQueue.length < 1) return;
   // if (msg.fromMe) return;
 
-  const chat = await msg.getChat();
+  isProcessing = true;
+  const { msg, chat } = messageQueue.shift();
 
-  console.log('Контент из WA:', msg.body)
-
-  const isSourceChat = sourceChats.includes(chat.id._serialized);
-
-  if (BOT_SETTINGS_GROUP.ID === chat.id._serialized) {
-    botSettingsActions(msg);
+  if (!msg || !chat) {
+    isProcessing = false;
     return;
   }
 
   try {
-    if (!isSourceChat) return;
-
     if (msg.hasMedia) {
       const media = await msg.downloadMedia();
 
@@ -91,12 +92,49 @@ const onMessageCreated = async (msg) => {
       return;
     }
 
-    let message = `${msg.body}\n\nКонтакты: wa.me/996709700433`;
+    let message = `${
+      msg.body
+    }\n\nАртикул: ${generateUniqueId?.()}\n\nКонтакты: wa.me/996709700433`;
 
     await sendToDestChats(message);
   } catch (err) {
     console.log("Случилась ошибка:", err);
+  } finally {
+    isProcessing = false;
+    processQueue(); // Продолжаем обработку очереди
   }
+};
+
+let timerId = 0;
+
+const onMessageCreated = async (msg) => {
+  clearTimeout(timerId);
+  const chat = await msg.getChat();
+
+  if (BOT_SETTINGS_GROUP.ID === chat.id._serialized) {
+    await botSettingsActions(msg);
+    return;
+  }
+
+  const isSourceChat = sourceChats.includes(chat.id._serialized);
+
+  if (!isSourceChat) return;
+
+  console.log("chat:", chat.name, chat.id._serialized);
+  console.log("body:", msg.body);
+
+   // Добавление сообщения в очередь с проверкой типа
+   if (msg.hasMedia) {
+    messageQueue.unshift({ msg, chat }); // Медиа-сообщения в начало очереди
+  } else {
+    messageQueue.push({ msg, chat }); // Текстовые сообщения в конец очереди
+  }
+
+  timerId = setTimeout(() => {
+    if (!isProcessing) {
+      processQueue();
+    }
+  }, 15000);
 };
 
 module.exports = { onMessageCreated };
