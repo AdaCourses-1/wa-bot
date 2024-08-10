@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --ignore ./db/groups.json  src/main.js",
-    "start": "node src/main.js"
+    "start": "npx puppeteer install && node src/main.js"
   },
   "keywords": [],
   "author": "",
