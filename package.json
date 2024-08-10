@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon --ignore ./db/groups.json  src/main.js"
+    "dev": "nodemon --ignore ./db/groups.json  src/main.js",
+    "start": "node src/main.js"
   },
   "keywords": [],
   "author": "",
