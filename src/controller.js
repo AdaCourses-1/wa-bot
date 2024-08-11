@@ -1,16 +1,14 @@
-const { ChatTypes } = require("whatsapp-web.js");
 const { CLIENT } = require("./config");
 const { BOT_SETTINGS_GROUP, COMMANDS, DB_PATHS } = require("./const");
 const { loadCacheFromFile, saveCacheToFile } = require("./saveGroups");
 const {
   destChats,
-  sourceChats,
   generateUniqueId,
   fileSizeInMb,
   isVideoOrImage,
 } = require("./utils");
 
-const messageQueue = [];
+let messageQueue = [];
 let isProcessing = false;
 
 const botSettingsActions = async (msg) => {
@@ -111,20 +109,13 @@ const onMessageCreated = async (msg) => {
   clearTimeout(timerId);
   const chat = await msg.getChat();
 
-  if (BOT_SETTINGS_GROUP.ID === chat.id._serialized) {
+  if (BOT_SETTINGS_GROUP.ID == chat.id._serialized) {
     await botSettingsActions(msg);
     return;
   }
 
-  const isSourceChat = sourceChats.includes(chat.id._serialized);
-
-  if (!isSourceChat) return;
-
-  console.log("chat:", chat.name, chat.id._serialized);
-  console.log("body:", msg.body);
-
-   // Добавление сообщения в очередь с проверкой типа
-   if (msg.hasMedia) {
+  // Добавление сообщения в очередь с проверкой типа
+  if (msg.hasMedia) {
     messageQueue.unshift({ msg, chat }); // Медиа-сообщения в начало очереди
   } else {
     messageQueue.push({ msg, chat }); // Текстовые сообщения в конец очереди
@@ -132,6 +123,10 @@ const onMessageCreated = async (msg) => {
 
   timerId = setTimeout(() => {
     if (!isProcessing) {
+      const messageText = messageQueue.at(-1);
+      const elements = messageQueue.slice(0, -1).reverse();
+
+      messageQueue = [...elements, messageText];
       processQueue();
     }
   }, 10000);

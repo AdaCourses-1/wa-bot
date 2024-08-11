@@ -10,10 +10,13 @@ const fileSizeInMb = (fileSize) => fileSize / 1024 / 1024 || 0;
 
 const isVideoOrImage = (mediaType) => mediaType?.startsWith("image/") || mediaType?.startsWith("video/");
 
+const shouldBlockThread = (chatId) => destChats.includes(chatId) || !sourceChats.includes(chatId)
+
 module.exports = {
   destChats,
   sourceChats,
   generateUniqueId,
   fileSizeInMb,
   isVideoOrImage,
+  shouldBlockThread
 };

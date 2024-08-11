@@ -3,6 +3,7 @@ const { onMessageCreated } = require("./controller");
 const { CLIENT_EVENTS, DB_PATHS } = require("./const");
 const { CLIENT } = require("./config");
 const { saveCacheToFile } = require("./saveGroups");
+const { shouldBlockThread } = require("./utils");
 
 const listGroups = async () => {
   try {
@@ -41,24 +42,23 @@ const processQueue = async (groupId) => {
   // Устанавливаем флаг обработки
   processing = true;
 
+  console.log("delay started");
+  await delay(120000);
+  console.log("delay ended");
+
   while (queue.length > 0) {
     const { msg } = queue.shift();
 
     try {
       await onMessageCreated(msg);
-      await delay(1000)
     } catch (err) {
       console.error("Ошибка при обработке сообщения:", err);
     }
   }
 
-  console.log('delay started')
-  await delay(60000)
-  console.log('delay ended')
-
   // Удаляем обработанную очередь
   messageQueues.delete(groupId);
-  
+
   // Сбрасываем флаг обработки
   processing = false;
 
@@ -76,10 +76,20 @@ const processNextQueue = async () => {
   }
 };
 
+// When the CLIENT is ready, run this code (only once)
+CLIENT.once(CLIENT_EVENTS.READY, () => {
+  listGroups();
+  console.log("CLIENT is ready!");
+});
+
 CLIENT.on(CLIENT_EVENTS.MESSAGE_CREATE, async (msg) => {
   try {
     const chat = await msg.getChat();
     const groupId = chat.id._serialized;
+
+    const isBlockedThread = shouldBlockThread(groupId);
+
+    if (isBlockedThread) return;
 
     // Создаем очередь для группы, если ее нет
     if (!messageQueues.has(groupId)) {
@@ -90,7 +100,7 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_CREATE, async (msg) => {
     const queue = messageQueues.get(groupId);
 
     if (!queue) return;
-  
+
     queue.push({ msg });
 
     // Запускаем обработку, если не было запущено
@@ -100,11 +110,6 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_CREATE, async (msg) => {
   } catch (err) {
     console.error("Ошибка получения чата:", err);
   }
-});
-// When the CLIENT is ready, run this code (only once)
-CLIENT.once(CLIENT_EVENTS.READY, () => {
-  listGroups();
-  console.log("CLIENT is ready!");
 });
 
 // When the CLIENT received QR-Code
