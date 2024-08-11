@@ -129,7 +129,7 @@ const onMessageCreated = async (msg) => {
       messageQueue = [...elements, messageText];
       processQueue();
     }
-  }, 10000);
+  }, 5000);
 };
 
 module.exports = { onMessageCreated };
