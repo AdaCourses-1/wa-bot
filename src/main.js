@@ -46,10 +46,15 @@ const processQueue = async (groupId) => {
 
     try {
       await onMessageCreated(msg);
+      await delay(1000)
     } catch (err) {
       console.error("Ошибка при обработке сообщения:", err);
     }
   }
+
+  console.log('delay started')
+  await delay(60000)
+  console.log('delay ended')
 
   // Удаляем обработанную очередь
   messageQueues.delete(groupId);
@@ -57,13 +62,11 @@ const processQueue = async (groupId) => {
   // Сбрасываем флаг обработки
   processing = false;
 
-  await delay(5000); 
-
   // Обрабатываем следующую очередь
   processNextQueue();
 };
 
-const processNextQueue = () => {
+const processNextQueue = async () => {
   if (processing) return;
 
   // Получаем очередь из первого доступного ключа
@@ -85,6 +88,9 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_CREATE, async (msg) => {
 
     // Добавляем сообщение в соответствующую очередь
     const queue = messageQueues.get(groupId);
+
+    if (!queue) return;
+  
     queue.push({ msg });
 
     // Запускаем обработку, если не было запущено
