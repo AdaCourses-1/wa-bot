@@ -78,8 +78,9 @@ const processNextQueue = async () => {
 
 // When the CLIENT is ready, run this code (only once)
 CLIENT.once(CLIENT_EVENTS.READY, () => {
+  console.log('started getting groups')
   listGroups();
-  console.log("CLIENT is ready!");
+  console.log("CLIENT is ready! Groups is Ready!");
 });
 
 CLIENT.on(CLIENT_EVENTS.MESSAGE_CREATE, async (msg) => {
