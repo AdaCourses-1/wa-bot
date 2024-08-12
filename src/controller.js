@@ -119,10 +119,10 @@ const onMessageCreated = async (msg) => {
 
   timerId = setTimeout(() => {
     if (!isProcessing) {
-      const messageText = messageQueue.at(-1);
-      const elements = messageQueue.slice(0, -1).reverse();
+      // const messageText = messageQueue.at(-1);
+      // const elements = messageQueue.slice(0, -1).reverse();
 
-      messageQueue = [...elements, messageText];
+      // messageQueue = [...elements, messageText];
       processQueue();
     }
   }, 2000);
