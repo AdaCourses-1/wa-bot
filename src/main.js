@@ -3,7 +3,7 @@ const { onMessageCreated } = require("./controller");
 const { CLIENT_EVENTS, DB_PATHS } = require("./const");
 const { CLIENT } = require("./config");
 const { saveCacheToFile } = require("./saveGroups");
-const { shouldBlockThread } = require("./utils");
+const { shouldBlockThread, sourceChats } = require("./utils");
 
 const listGroups = async () => {
   try {
@@ -79,13 +79,13 @@ const processNextQueue = async () => {
 };
 
 // When the CLIENT is ready, run this code (only once)
-CLIENT.once(CLIENT_EVENTS.READY, () => {
-  console.log('started getting groups')
+CLIENT.once(CLIENT_EVENTS.READY, async () => {
+  console.log("started getting groups");
   listGroups();
   console.log("CLIENT is ready! Groups is Ready!");
 });
 
-CLIENT.on(CLIENT_EVENTS.MESSAGE_CREATE, async (msg) => {
+CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
   try {
     const chat = await msg.getChat();
     const groupId = chat.id._serialized;
@@ -98,6 +98,8 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_CREATE, async (msg) => {
     if (!messageQueues.has(groupId)) {
       messageQueues.set(groupId, []);
     }
+
+    console.log(msg.type)
 
     // Добавляем сообщение в соответствующую очередь
     const queue = messageQueues.get(groupId);

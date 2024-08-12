@@ -1,5 +1,8 @@
+const { Events } = require("whatsapp-web.js");
+
 const CLIENT_EVENTS = {
-  MESSAGE_CREATE: "message_create",
+  MESSAGE_CREATE: Events.MESSAGE_CREATE,
+  MESSAGE_RECEIVED: Events.MESSAGE_RECEIVED,
   AUTH_FAILURE: "auth_failure",
   QR: "qr",
   READY: "ready",
