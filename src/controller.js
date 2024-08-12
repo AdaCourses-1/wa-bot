@@ -115,11 +115,7 @@ const onMessageCreated = async (msg) => {
   }
 
   // Добавление сообщения в очередь с проверкой типа
-  if (msg.hasMedia) {
-    messageQueue.unshift({ msg, chat }); // Медиа-сообщения в начало очереди
-  } else {
-    messageQueue.push({ msg, chat }); // Текстовые сообщения в конец очереди
-  }
+  messageQueue.push({ msg, chat });
 
   timerId = setTimeout(() => {
     if (!isProcessing) {
