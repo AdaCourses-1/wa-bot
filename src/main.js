@@ -3,7 +3,7 @@ const { onMessageCreated } = require("./controller");
 const { CLIENT_EVENTS, DB_PATHS } = require("./const");
 const { CLIENT } = require("./config");
 const { saveCacheToFile } = require("./saveGroups");
-const { shouldBlockThread, sourceChats } = require("./utils");
+const { shouldBlockThread } = require("./utils");
 
 const listGroups = async () => {
   try {
@@ -43,7 +43,7 @@ const processQueue = async (groupId) => {
   processing = true;
 
   console.log("delay started");
-  await delay(2000);
+  await delay(10000);
 
   while (queue.length > 0) {
     const { msg } = queue.shift();
@@ -58,7 +58,7 @@ const processQueue = async (groupId) => {
   // Удаляем обработанную очередь
   messageQueues.delete(groupId);
 
-  await delay(2000);
+  await delay(10000);
   console.log("delay ended");
 
   // Сбрасываем флаг обработки
