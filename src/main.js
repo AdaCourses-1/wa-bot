@@ -43,7 +43,7 @@ const processQueue = async (groupId) => {
   processing = true;
 
   console.log("delay started");
-  await delay(3000);
+  await delay(2000);
 
   while (queue.length > 0) {
     const { msg } = queue.shift();
@@ -58,7 +58,7 @@ const processQueue = async (groupId) => {
   // Удаляем обработанную очередь
   messageQueues.delete(groupId);
 
-  await delay(90000);
+  await delay(2000);
   console.log("delay ended");
 
   // Сбрасываем флаг обработки
