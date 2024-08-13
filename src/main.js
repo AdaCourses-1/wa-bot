@@ -92,14 +92,14 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
 
     const isBlockedThread = shouldBlockThread(groupId);
 
-    if (isBlockedThread) return;
+    if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
 
     // Создаем очередь для группы, если ее нет
     if (!messageQueues.has(groupId)) {
       messageQueues.set(groupId, []);
     }
 
-    console.log(msg.type)
+    console.log(msg.type, msg.body ? msg.body : `Это картинка с группы ${chat.name}`)
 
     // Добавляем сообщение в соответствующую очередь
     const queue = messageQueues.get(groupId);
