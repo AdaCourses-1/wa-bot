@@ -130,3 +130,20 @@ CLIENT.on(CLIENT_EVENTS.AUTH_FAILURE, () => {
 
 // Start your CLIENT
 CLIENT.initialize();
+
+let reconnectInterval = null;
+
+const attemptReconnect = () => {
+  console.log("Попытка восстановить соединение...");
+  CLIENT.initialize().then(() => {
+    reconnectInterval = null;
+  })
+};
+
+CLIENT.on(CLIENT_EVENTS.DISCONNECTED, () => {
+  console.error("Соединение потеряно. Переподключение через 1 минуту...");
+
+  if (!reconnectInterval) {
+    reconnectInterval = setInterval(attemptReconnect, 60000);
+  }
+});

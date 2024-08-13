@@ -6,6 +6,7 @@ const CLIENT_EVENTS = {
   AUTH_FAILURE: "auth_failure",
   QR: "qr",
   READY: "ready",
+  DISCONNECTED: Events.DISCONNECTED
 };
 
 const DB_PATHS = {
