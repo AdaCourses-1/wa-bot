@@ -20,16 +20,20 @@ const shouldBlockThread = (chatId) =>
 
 const sanitizeMessage = (body) => {
   if (!body || typeof body !== "string") return '';
-  
-  let sanitizedBody = body;
+
+  let sanitizedBody = body.toLowerCase();
 
   KEYWORDS_TO_REMOVE.forEach((keyword) => {
-    const regex = new RegExp(`\\b${keyword}\\b`, "gi");
+    const regex = new RegExp(`\\b${keyword.toLowerCase()}\\b`, "gi");
     sanitizedBody = sanitizedBody.replace(regex, "");
   });
 
+  console.log('unsanitizedBody:', body)
+
   // Удаляем лишние пробелы, если нужно
-  // sanitizedBody = sanitizedBody.replace(/\s{2,}/g, " ").trim();
+  sanitizedBody = sanitizedBody.replace(/\s{2,}/g, " ").trim();
+
+  console.log('sanitizedBody:', sanitizedBody)
 
   return sanitizedBody;
 };
