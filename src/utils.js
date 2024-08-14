@@ -21,7 +21,7 @@ const shouldBlockThread = (chatId) =>
 const sanitizeMessage = (body) => {
   let sanitizedBody = body.toLowerCase();
 
-  keywords.forEach((keyword) => {
+  KEYWORDS_TO_REMOVE.forEach((keyword) => {
     // Экранируем специальные символы в ключевых словах
     const escapedKeyword = keyword
       .toLowerCase()
