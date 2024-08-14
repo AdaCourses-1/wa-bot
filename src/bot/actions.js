@@ -58,7 +58,7 @@ const botSettingsActions = async (msg) => {
     try {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
-        KEYWORDS_TO_REMOVE.join(",")
+        KEYWORDS_TO_REMOVE.join(", ")
       );
     } catch (err) {
       console.log(

@@ -80,10 +80,10 @@ const onMessageCreated = async (msg) => {
 
   timerId = setTimeout(() => {
     if (!isProcessing) {
-      const firstMessage = messageQueue.at(-1);
+      const firstMessage = messageQueue[0];
 
       if (firstMessage && firstMessage.msg?.body) {
-        const elements = messageQueue.slice(0, -1).reverse();
+        const elements = messageQueue.slice(1).reverse();
 
         messageQueue = [...elements, firstMessage];
       }
