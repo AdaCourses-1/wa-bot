@@ -20,22 +20,14 @@ const shouldBlockThread = (chatId) =>
 
 const sanitizeMessage = (body) => {
   if (!body || typeof body !== "string") return '';
-
-  let sanitizedBody = body.toLowerCase();
-
-  KEYWORDS_TO_REMOVE.forEach((keyword) => {
-    const regex = new RegExp(`\\b${keyword.toLowerCase()}\\b`, "gi");
-    sanitizedBody = sanitizedBody.replace(regex, "");
-  });
-
-  console.log('unsanitizedBody:', body)
-
-  // Удаляем лишние пробелы, если нужно
-  sanitizedBody = sanitizedBody.replace(/\s{2,}/g, " ").trim();
-
-  console.log('sanitizedBody:', sanitizedBody)
-
-  return sanitizedBody;
+  // Разбиваем текст на слова
+  const words = body.split(/\s+/);
+  
+  // Фильтруем слова, исключая те, которые присутствуют в наборе keywords
+  const filteredWords = words.filter(word => !KEYWORDS_TO_REMOVE.has(word));
+  
+  // Объединяем отфильтрованные слова обратно в строку
+  return filteredWords.join(" ");
 };
 
 module.exports = {
