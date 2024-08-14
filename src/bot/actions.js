@@ -1,5 +1,10 @@
 const { CLIENT } = require("../config");
-const { BOT_SETTINGS_GROUP, COMMANDS, DB_PATHS } = require("../const");
+const {
+  BOT_SETTINGS_GROUP,
+  COMMANDS,
+  DB_PATHS,
+  KEYWORDS_TO_REMOVE,
+} = require("../const");
 const { loadCacheFromFile, saveCacheToFile } = require("../saveGroups");
 
 const botSettingsActions = async (msg) => {
@@ -49,10 +54,20 @@ const botSettingsActions = async (msg) => {
     }
   }
 
-  // Обязательно сбрасывайте isProcessing и продолжайте обработку очереди
-  isProcessing = false;
+  if (command.includes(COMMANDS.GET_KEYWORDS)) {
+    try {
+      await CLIENT.sendMessage(
+        BOT_SETTINGS_GROUP.ID,
+        KEYWORDS_TO_REMOVE.join("")
+      );
+    } catch (err) {
+      console.log(
+        `Не смог выполнить команду ${COMMANDS.GET_KEYWORDS}, причина: ${err.message}`
+      );
+    }
+  }
 };
 
 module.exports = {
-    botSettingsActions
-}
+  botSettingsActions,
+};

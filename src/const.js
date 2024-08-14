@@ -31,6 +31,7 @@ const COMMANDS = {
 };
 
 const KEYWORDS_TO_REMOVE = [
+  "893/8",
   "Дордой",
   "дордой",
   "Дорд",
@@ -74,7 +75,6 @@ const KEYWORDS_TO_REMOVE = [
   "Адрес",
   "адр.",
   "Адр.",
-  "893/8",
 ];
 
 const LINKS_TO_REMOVE = ["https", "http", "wa.me/", "t.me/"];

@@ -50,7 +50,7 @@ const processQueue = async () => {
       return;
     }
 
-    const textWithoutLinks = removeLinksFromText(msg.body) // no links
+    const textWithoutLinks = removeLinksFromText(msg.body); // no links
     const textWithoutKeywords = sanitizeMessage(textWithoutLinks); // no keywords
     let message = `${textWithoutKeywords}\n\nАртикул: ${generateUniqueId?.()}\n\nКонтакты: wa.me/996709700433`;
 
@@ -71,6 +71,7 @@ const onMessageCreated = async (msg) => {
 
   if (BOT_SETTINGS_GROUP.ID == chat.id._serialized) {
     await botSettingsActions(msg);
+    isProcessing = false;
     return;
   }
 
@@ -79,13 +80,17 @@ const onMessageCreated = async (msg) => {
 
   timerId = setTimeout(() => {
     if (!isProcessing) {
-      // const messageText = messageQueue.at(-1);
-      // const elements = messageQueue.slice(0, -1).reverse();
+      const firstMessage = messageQueue.at(-1);
 
-      // messageQueue = [...elements, messageText];
+      if (firstMessage && firstMessage.msg?.body) {
+        const elements = messageQueue.slice(0, -1).reverse();
+
+        messageQueue = [...elements, firstMessage];
+      }
+
       processQueue();
     }
-  }, 2000);
+  }, 5000);
 };
 
 module.exports = { onMessageCreated };
