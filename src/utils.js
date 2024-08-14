@@ -19,15 +19,21 @@ const shouldBlockThread = (chatId) =>
   );
 
 const sanitizeMessage = (body) => {
-  if (!body || typeof body !== "string") return '';
-  // Разбиваем текст на слова
-  const words = body.split(/\s+/);
-  
-  // Фильтруем слова, исключая те, которые присутствуют в наборе keywords
-  const filteredWords = words.filter(word => !KEYWORDS_TO_REMOVE.has(word));
-  
-  // Объединяем отфильтрованные слова обратно в строку
-  return filteredWords.join(" ");
+  let sanitizedBody = body.toLowerCase();
+
+  keywords.forEach((keyword) => {
+    // Экранируем специальные символы в ключевых словах
+    const escapedKeyword = keyword
+      .toLowerCase()
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(escapedKeyword, "gi");
+    sanitizedBody = sanitizedBody.replace(regex, "").trim();
+  });
+
+  // Убираем лишние пробелы и знаки препинания
+  sanitizedBody = sanitizedBody.replace(/[\s,;]+/g, " ").trim();
+
+  return sanitizedBody;
 };
 
 module.exports = {
