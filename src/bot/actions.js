@@ -53,4 +53,6 @@ const botSettingsActions = async (msg) => {
   isProcessing = false;
 };
 
-export default botSettingsActions
+module.exports = {
+    botSettingsActions
+}

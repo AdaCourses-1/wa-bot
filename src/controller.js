@@ -1,4 +1,4 @@
-const { default: botSettingsActions } = require("./bot/actions");
+const { botSettingsActions } = require("./bot/actions");
 const { CLIENT } = require("./config");
 const { BOT_SETTINGS_GROUP } = require("./const");
 const {
