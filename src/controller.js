@@ -50,10 +50,9 @@ const processQueue = async () => {
       return;
     }
 
-    const textWithoutKeywords = sanitizeMessage(msg.body); // no keywords
-    const textWithoutLinks = removeLinksFromText(textWithoutKeywords) // no links
-
-    let message = `${textWithoutLinks}\n\nАртикул: ${generateUniqueId?.()}\n\nКонтакты: wa.me/996709700433`;
+    const textWithoutLinks = removeLinksFromText(msg.body) // no links
+    const textWithoutKeywords = sanitizeMessage(textWithoutLinks); // no keywords
+    let message = `${textWithoutKeywords}\n\nАртикул: ${generateUniqueId?.()}\n\nКонтакты: wa.me/996709700433`;
 
     await sendToDestChats(message);
   } catch (err) {
