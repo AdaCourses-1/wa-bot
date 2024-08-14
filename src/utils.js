@@ -1,4 +1,9 @@
-const { DB_PATHS, BOT_SETTINGS_GROUP, KEYWORDS_TO_REMOVE } = require("./const");
+const {
+  DB_PATHS,
+  BOT_SETTINGS_GROUP,
+  KEYWORDS_TO_REMOVE,
+  LINKS_TO_REMOVE,
+} = require("./const");
 const { loadCacheFromFile } = require("./saveGroups");
 
 const destChats = loadCacheFromFile(DB_PATHS.BOT_SETTINGS)?.dest_chats || [];
@@ -33,7 +38,21 @@ const sanitizeMessage = (body) => {
   // Убираем лишние пробелы и знаки препинания
   sanitizedBody = sanitizedBody.replace(/[\s,;]+/g, " ").trim();
 
-  return sanitizedBody;
+  return sanitizedBody ? sanitizedBody : "Новое поступление!";
+};
+
+const removeLinksFromText = (body) => {
+  let formattedBody = body;
+
+  LINKS_TO_REMOVE.forEach((link) => {
+    const regex = new RegExp(`${link}\\S*`, "gi");
+    formattedBody = formattedBody.replace(regex, "").trim();
+  });
+
+  // Убираем лишние пробелы, которые могли остаться после удаления ссылок
+  formattedBody = formattedBody.replace(/\s{2,}/g, ' ').trim();
+
+  return formattedBody;
 };
 
 module.exports = {
@@ -44,4 +63,5 @@ module.exports = {
   isVideoOrImage,
   shouldBlockThread,
   sanitizeMessage,
+  removeLinksFromText
 };
