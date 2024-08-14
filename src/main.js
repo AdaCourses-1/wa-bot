@@ -135,7 +135,9 @@ let reconnectInterval = null;
 
 const attemptReconnect = () => {
   console.log("Попытка восстановить соединение...");
+
   CLIENT.initialize().then(() => {
+    clearInterval(reconnectInterval);
     reconnectInterval = null;
   })
 };

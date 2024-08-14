@@ -6,6 +6,7 @@ const {
   generateUniqueId,
   fileSizeInMb,
   isVideoOrImage,
+  sanitizeMessage,
 } = require("./utils");
 
 let messageQueue = [];
@@ -23,18 +24,19 @@ const botSettingsActions = async (msg) => {
       message += `Название: ${chat.name}\n` + `ID: ${chat.id}\n` + `\n---\n`; // Adds a separator line for clarity
     });
 
-    console.log(`Поступила команда ${COMMANDS.GET_CHATS}, выполняю!`)
+    console.log(`Поступила команда ${COMMANDS.GET_CHATS}, выполняю!`);
 
     try {
       await CLIENT.sendMessage(BOT_SETTINGS_GROUP.ID, message);
-    }
-    catch (err) {
-      console.log(`Не смог выполнить команду ${COMMANDS.GET_CHATS}, причина: ${err.message}`)
+    } catch (err) {
+      console.log(
+        `Не смог выполнить команду ${COMMANDS.GET_CHATS}, причина: ${err.message}`
+      );
     }
   }
 
   if (command.includes(COMMANDS.ADD_DEST_TYPE)) {
-    console.log(`Поступила команда:${COMMANDS.ADD_DEST_TYPE}, выполняю!`)
+    console.log(`Поступила команда:${COMMANDS.ADD_DEST_TYPE}, выполняю!`);
     const destChatId = command?.split(":")[1]?.trim();
     const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
 
@@ -98,9 +100,9 @@ const processQueue = async () => {
       return;
     }
 
-    let message = `${
-      msg.body
-    }\n\nАртикул: ${generateUniqueId?.()}\n\nКонтакты: wa.me/996709700433`;
+    let formattedText = sanitizeMessage(msg.body); // no keywords
+
+    let message = `${formattedText}\n\nАртикул: ${generateUniqueId?.()}\n\nКонтакты: wa.me/996709700433`;
 
     await sendToDestChats(message);
   } catch (err) {

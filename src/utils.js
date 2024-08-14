@@ -1,4 +1,4 @@
-const { DB_PATHS, BOT_SETTINGS_GROUP } = require("./const");
+const { DB_PATHS, BOT_SETTINGS_GROUP, KEYWORDS_TO_REMOVE } = require("./const");
 const { loadCacheFromFile } = require("./saveGroups");
 
 const destChats = loadCacheFromFile(DB_PATHS.BOT_SETTINGS)?.dest_chats || [];
@@ -18,6 +18,22 @@ const shouldBlockThread = (chatId) =>
     BOT_SETTINGS_GROUP.ID === chatId
   );
 
+const sanitizeMessage = (body) => {
+  if (!body || typeof body !== "string") return '';
+  
+  let sanitizedBody = body;
+
+  KEYWORDS_TO_REMOVE.forEach((keyword) => {
+    const regex = new RegExp(`\\b${keyword}\\b`, "gi");
+    sanitizedBody = sanitizedBody.replace(regex, "");
+  });
+
+  // Удаляем лишние пробелы, если нужно
+  // sanitizedBody = sanitizedBody.replace(/\s{2,}/g, " ").trim();
+
+  return sanitizedBody;
+};
+
 module.exports = {
   destChats,
   sourceChats,
@@ -25,4 +41,5 @@ module.exports = {
   fileSizeInMb,
   isVideoOrImage,
   shouldBlockThread,
+  sanitizeMessage,
 };
