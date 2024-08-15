@@ -21,6 +21,13 @@ const BOT_SETTINGS_GROUP = {
   ID: "120363321873527844@g.us",
   USER_ID: "120363321873527844",
 };
+
+const BOT_HISTORY_GROUP = {
+  NAME: "",
+  ID: "120363325237594651@g.us",
+  USER_ID: "120363321873527844",
+};
+
 const COMMANDS = {
   GET_CHATS: "Получить чаты",
   ADD_DEST_TYPE: "Куда скидывать",
@@ -38,6 +45,8 @@ const KEYWORDS_TO_REMOVE = [
   "проход",
   "прох",
   "конт",
+  "контейнер",
+  "рынок",
   "кон",
   "ряд",
   "р.",
@@ -67,7 +76,7 @@ const KEYWORDS_TO_REMOVE = [
   "адр.",
 ];
 
-const LINKS_TO_REMOVE = ["https", "http", "wa.me/", "t.me/"];
+const LINKS_TO_REMOVE = ["https", "http", "wa.me", "t.me"];
 
 module.exports = {
   CLIENT_EVENTS,
@@ -75,5 +84,6 @@ module.exports = {
   COMMANDS,
   DB_PATHS,
   KEYWORDS_TO_REMOVE,
-  LINKS_TO_REMOVE
+  LINKS_TO_REMOVE,
+  BOT_HISTORY_GROUP
 };

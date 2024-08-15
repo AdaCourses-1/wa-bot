@@ -1,6 +1,6 @@
 const { botSettingsActions } = require("./bot/actions");
 const { CLIENT } = require("./config");
-const { BOT_SETTINGS_GROUP } = require("./const");
+const { BOT_SETTINGS_GROUP, BOT_HISTORY_GROUP } = require("./const");
 const {
   destChats,
   generateUniqueId,
@@ -13,11 +13,17 @@ const {
 let messageQueue = [];
 let isProcessing = false;
 
-const sendToDestChats = async (data) => {
+const sendToDestChats = async (data, chat) => {
   if (destChats && destChats.length < 1) return;
 
   for (const chatId of destChats) {
     await CLIENT.sendMessage(chatId, data);
+    await CLIENT.sendMessage(BOT_HISTORY_GROUP.ID, data);
+
+    if (chat) {
+      const messageWithHistory = `${data}\n\nИз какой группы: ${chat.name}`;
+      await CLIENT.sendMessage(BOT_HISTORY_GROUP.ID, messageWithHistory);
+    }
   }
 };
 
@@ -54,7 +60,7 @@ const processQueue = async () => {
     const textWithoutKeywords = sanitizeMessage(textWithoutLinks); // no keywords
     let message = `${textWithoutKeywords}\n\nАртикул: ${generateUniqueId?.()}\n\nКонтакты: wa.me/996709700433`;
 
-    await sendToDestChats(message);
+    await sendToDestChats(message, chat);
   } catch (err) {
     console.log("Случилась ошибка:", err);
   } finally {
