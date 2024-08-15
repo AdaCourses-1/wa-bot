@@ -24,23 +24,21 @@ const shouldBlockThread = (chatId) =>
   );
 
 const sanitizeMessage = (body) => {
-  let sanitizedBody = body.toLowerCase();
+  let sanitizedBody = body;
 
   KEYWORDS_TO_REMOVE.forEach((keyword) => {
     // Экранируем специальные символы в ключевых словах
-    const escapedKeyword = keyword
-      .toLowerCase()
-      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  
-    // Создаем регулярное выражение с границами слова
-    const regex = new RegExp(`\\b${escapedKeyword}\\b`, "gi");
-  
-    // Заменяем ключевое слово на пустую строку, если оно окружено границами слова
-    sanitizedBody = sanitizedBody.replace(regex, "").trim();
+    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    // Создаем регулярное выражение для поиска ключевого слова с учетом пробелов или знаков препинания
+    const regex = new RegExp(`(^|\\s|\\b)${escapedKeyword}(\\b|\\s|$)`, "gi");
+
+    // Заменяем ключевое слово на пустую строку
+    sanitizedBody = sanitizedBody.replace(regex, " ").trim();
   });
 
-  // Убираем лишние пробелы и знаки препинания
-  sanitizedBody = sanitizedBody.replace(/[\s,;]+/g, " ").trim();
+  // Убираем лишние пробелы
+  sanitizedBody = sanitizedBody.replace(/\s+/g, " ").trim();
 
   return sanitizedBody ? sanitizedBody : "Новое поступление!";
 };
@@ -54,7 +52,7 @@ const removeLinksFromText = (body) => {
   });
 
   // Убираем лишние пробелы, которые могли остаться после удаления ссылок
-  formattedBody = formattedBody.replace(/\s{2,}/g, ' ').trim();
+  formattedBody = formattedBody.replace(/\s{2,}/g, " ").trim();
 
   return formattedBody;
 };
@@ -67,5 +65,5 @@ module.exports = {
   isVideoOrImage,
   shouldBlockThread,
   sanitizeMessage,
-  removeLinksFromText
+  removeLinksFromText,
 };
