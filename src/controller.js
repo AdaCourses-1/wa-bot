@@ -18,12 +18,13 @@ const sendToDestChats = async (data, chat) => {
 
   for (const chatId of destChats) {
     await CLIENT.sendMessage(chatId, data);
-    await CLIENT.sendMessage(BOT_HISTORY_GROUP.ID, data);
+  }
 
-    if (chat) {
-      const messageWithHistory = `${data}\n\nИз какой группы: ${chat.name}`;
-      await CLIENT.sendMessage(BOT_HISTORY_GROUP.ID, messageWithHistory);
-    }
+  await CLIENT.sendMessage(BOT_HISTORY_GROUP.ID, data);
+
+  if (chat) {
+    const messageWithHistory = `${data}\n\nИз какой группы: ${chat.name}`;
+    await CLIENT.sendMessage(BOT_HISTORY_GROUP.ID, messageWithHistory);
   }
 };
 
