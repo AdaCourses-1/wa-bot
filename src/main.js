@@ -14,7 +14,6 @@ const listGroups = async () => {
       console.log("Бот не добавлен ни в одну группу.");
     } else {
       const mappedGroups = groups
-        .filter((group) => group.isGroup)
         .map((gp) => ({
           name: gp.name,
           userId: gp.id.user,

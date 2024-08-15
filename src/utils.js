@@ -31,7 +31,11 @@ const sanitizeMessage = (body) => {
     const escapedKeyword = keyword
       .toLowerCase()
       .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(escapedKeyword, "gi");
+  
+    // Создаем регулярное выражение с границами слова
+    const regex = new RegExp(`\\b${escapedKeyword}\\b`, "gi");
+  
+    // Заменяем ключевое слово на пустую строку, если оно окружено границами слова
     sanitizedBody = sanitizedBody.replace(regex, "").trim();
   });
 
