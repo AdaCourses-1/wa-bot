@@ -20,11 +20,13 @@ const sendToDestChats = async (data, chat) => {
     await CLIENT.sendMessage(chatId, data);
   }
 
-  await CLIENT.sendMessage(BOT_HISTORY_GROUP.ID, data);
-
+  // Отправляем те же сообщения в группу истории бота
   if (chat) {
     const messageWithHistory = `${data}\n\nИз какой группы: ${chat.name}`;
     await CLIENT.sendMessage(BOT_HISTORY_GROUP.ID, messageWithHistory);
+  }
+  else {
+    await CLIENT.sendMessage(BOT_HISTORY_GROUP.ID, data);
   }
 };
 
