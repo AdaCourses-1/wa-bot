@@ -113,9 +113,6 @@ const botSettingsActions = async (msg) => {
       const chatId1 = lines[2].split(": ")[1]; // 2 строка
       const chatId2 = lines[3].split(": ")[1]; // 3 строка
 
-      console.log(`chatId1: ${chatId1}`, "SOURCE_CHAT"); // 'CHAT_ID1'
-      console.log(`chatId2: ${chatId2}`, "DEST_CHAT"); // 'CHAT_ID2'
-
       const newExactPath = {
         source_chat: chatId1,
         dest_chat: chatId2,
@@ -127,17 +124,23 @@ const botSettingsActions = async (msg) => {
           exact_paths: [...bot.exact_paths, newExactPath],
         };
         saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
-        console.log("exact_paths", data);
       } else {
         const data = {
           ...bot,
           exact_paths: [newExactPath],
         };
         saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
-        console.log("exact_paths", data);
       }
+
+      await CLIENT.sendMessage(
+        BOT_SETTINGS_GROUP.ID,
+        `Успешно добавил 2 группы!\n\nТеперь товары будут браться конкретно из группы ${newExactPath.source_chat} и добавляться конкретно в группу ${newExactPath.dest_chat}`
+      );
     } catch (err) {
-      console.log("Не удалось извлечь chat_id:", err.message);
+      await CLIENT.sendMessage(
+        BOT_SETTINGS_GROUP.ID,
+        `Не получилось реализовать команду ${COMMANDS.ADD_EXACT_PATHS} по причине:\n\n${err.message}`
+      );
     }
   }
 };
