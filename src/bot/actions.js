@@ -14,16 +14,15 @@ const botSettingsActions = async (msg) => {
   if (command === COMMANDS.GET_CHATS) {
     const chats = loadCacheFromFile(DB_PATHS.GROUPS);
 
-    let message = ``;
-
-    chats?.forEach((chat) => {
-      message += `Название: ${chat.name}\n` + `ID: ${chat.id}\n` + `\n---\n`; // Adds a separator line for clarity
-    });
-
     console.log(`Поступила команда ${COMMANDS.GET_CHATS}, выполняю!`);
 
     try {
-      await CLIENT.sendMessage(BOT_SETTINGS_GROUP.ID, message);
+      chats?.forEach(async (chat, index) => {
+        await CLIENT.sendMessage(
+          BOT_SETTINGS_GROUP.ID,
+          `${index + 1}. Название: ${chat.name}\n` + `ID: ${chat.id}`
+        );
+      });
     } catch (err) {
       console.log(
         `Не смог выполнить команду ${COMMANDS.GET_CHATS}, причина: ${err.message}`
@@ -34,13 +33,16 @@ const botSettingsActions = async (msg) => {
 
   if (command === COMMANDS.GET_ALL_COMMANDS) {
     const allCommands = Object.values(COMMANDS);
+
     try {
-      allCommands.forEach(async (botCommand, index) => {
+      for (let index = 0; index < allCommands.length; index++) {
+        const botCommand = allCommands[index];
+
         await CLIENT.sendMessage(
           BOT_SETTINGS_GROUP.ID,
           `${index + 1}. Команда: ${botCommand}`
         );
-      });
+      }
     } catch (err) {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
@@ -171,6 +173,13 @@ const botSettingsActions = async (msg) => {
     const chats = await CLIENT.getChats();
 
     try {
+      if (!Boolean(bot.exact_paths.length)) {
+        return await CLIENT.sendMessage(
+          BOT_SETTINGS_GROUP.ID,
+          "Извините, но нечего удалять!"
+        );
+      }
+
       bot.exact_paths?.forEach(async (path) => {
         const sourceChat = chats.find(
           (chat) => chat.id._serialized === path.source_chat
@@ -196,6 +205,7 @@ const botSettingsActions = async (msg) => {
 
   if (command.includes(COMMANDS.CLEAR_EXACT_PATHS)) {
     const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+
     try {
       const data = {
         ...bot,
