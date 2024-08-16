@@ -31,6 +31,23 @@ const botSettingsActions = async (msg) => {
     }
   }
 
+  if (command === COMMANDS.GET_ALL_COMMANDS) {
+    const allCommands = Object.values(COMMANDS);
+    try {
+      allCommands.forEach(async (botCommand) => {
+        await CLIENT.sendMessage(
+          BOT_SETTINGS_GROUP.ID,
+          `Команда: ${botCommand}`
+        );
+      });
+    } catch (err) {
+      await CLIENT.sendMessage(
+        BOT_SETTINGS_GROUP.ID,
+        `Не получилось выполнить команду: ${COMMANDS.GET_ALL_COMMANDS} по причине:\n\n${err.message}`
+      );
+    }
+  }
+
   if (command.includes(COMMANDS.ADD_DEST_TYPE)) {
     console.log(`Поступила команда:${COMMANDS.ADD_DEST_TYPE}, выполняю!`);
     const destChatId = command?.split(":")[1]?.trim();

@@ -30,6 +30,7 @@ const BOT_HISTORY_GROUP = {
 
 const COMMANDS = {
   GET_CHATS: "Получить чаты",
+  GET_ALL_COMMANDS: "Получить команды",
   GET_ADDED_GROUPS: "Получить добавленные группы",
   ADD_DEST_TYPE: "Куда скидывать",
   ADD_SOURCE_TYPE: "Откуда брать",
