@@ -104,20 +104,17 @@ const botSettingsActions = async (msg) => {
   }
 
   if (command.includes(COMMANDS.ADD_EXACT_PATHS)) {
-    // Регулярное выражение для поиска chat_id
-    const regex = /Откуда:\s*(\w+)\s*Куда:\s*(\w+)/;
+    try {
+      const lines = command.trim().split("\n");
 
-    // Применяем регулярное выражение к строке
-    const matches = command.match(regex);
-
-    if (matches) {
-      const chatId1 = matches[1]; 
-      const chatId2 = matches[2];
-
-      console.log(`chatId1: ${chatId1}`, 'SOURCE_CHAT'); // 'CHAT_ID1'
-      console.log(`chatId2: ${chatId2}`, 'DEST_CHAT'); // 'CHAT_ID2'
-    } else {
-      console.log("Не удалось извлечь chat_id");
+      // Извлекаем chat_id1 и chat_id2
+      const chatId1 = lines[1].split(": ")[1];
+      const chatId2 = lines[2].split(": ")[1];
+    
+      console.log(`chatId1: ${chatId1}`, "SOURCE_CHAT"); // 'CHAT_ID1'
+      console.log(`chatId2: ${chatId2}`, "DEST_CHAT"); // 'CHAT_ID2'
+    } catch (err) {
+      console.log("Не удалось извлечь chat_id:", err.message);
     }
   }
 };
