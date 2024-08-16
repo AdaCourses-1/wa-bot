@@ -29,6 +29,7 @@ const botSettingsActions = async (msg) => {
         `Не смог выполнить команду ${COMMANDS.GET_CHATS}, причина: ${err.message}`
       );
     }
+    return;
   }
 
   if (command === COMMANDS.GET_ALL_COMMANDS) {
@@ -46,6 +47,8 @@ const botSettingsActions = async (msg) => {
         `Не получилось выполнить команду: ${COMMANDS.GET_ALL_COMMANDS} по причине:\n\n${err.message}`
       );
     }
+
+    return;
   }
 
   if (command.includes(COMMANDS.ADD_DEST_TYPE)) {
@@ -165,12 +168,27 @@ const botSettingsActions = async (msg) => {
 
   if (command.includes(COMMANDS.GET_EXACT_PATHS)) {
     const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+    const chats = await CLIENT.getChats();
 
     try {
       bot.exact_paths?.forEach(async (path) => {
+        const sourceChat = chats.find(
+          (chat) => chat.id._serialized === path.source_chat
+        );
+        const destChat = chats.find(
+          (chat) => chat.id._serialized === path.dest_chat
+        );
+
         await CLIENT.sendMessage(
           BOT_SETTINGS_GROUP.ID,
-          `Откуда:${path.source_chat}\n\n Куда:${path.dest_chat}`
+          ` Откуда:\n
+            Название:${sourceChat.name}\n
+            ID:${sourceChat.id._serialized}\n\n 
+            
+            Куда:\n
+            Название:${destChat.name}\n
+            ID:${destChat.id._serialized}
+          `
         );
       });
     } catch (err) {
