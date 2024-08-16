@@ -3,9 +3,9 @@ const { Events } = require("whatsapp-web.js");
 const CLIENT_EVENTS = {
   MESSAGE_CREATE: Events.MESSAGE_CREATE,
   MESSAGE_RECEIVED: Events.MESSAGE_RECEIVED,
-  AUTH_FAILURE: "auth_failure",
-  QR: "qr",
-  READY: "ready",
+  AUTH_FAILURE: Events.AUTHENTICATION_FAILURE,
+  QR: Events.QR_RECEIVED,
+  READY: Events.READY,
   DISCONNECTED: Events.DISCONNECTED,
 };
 
@@ -23,7 +23,7 @@ const BOT_SETTINGS_GROUP = {
 };
 
 const BOT_HISTORY_GROUP = {
-  NAME: "",
+  NAME: "История Бота",
   ID: "120363325237594651@g.us",
   USER_ID: "120363321873527844",
 };

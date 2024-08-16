@@ -4,7 +4,6 @@ const {
   COMMANDS,
   DB_PATHS,
   KEYWORDS_TO_REMOVE,
-  BOT_HISTORY_GROUP,
 } = require("../const");
 const { loadCacheFromFile, saveCacheToFile } = require("../saveGroups");
 

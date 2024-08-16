@@ -1,9 +1,13 @@
-const qrcode = require("qrcode-terminal");
 const { onMessageCreated } = require("./controller");
 const { CLIENT_EVENTS, DB_PATHS } = require("./const");
 const { CLIENT } = require("./config");
 const { saveCacheToFile } = require("./saveGroups");
 const { shouldBlockThread } = require("./utils");
+const {
+  sendQr,
+  whatsAppBotReady,
+  whatsAppBotLostConnection,
+} = require("./telegram-notifier-bot/actions");
 
 const listGroups = async () => {
   try {
@@ -13,14 +17,13 @@ const listGroups = async () => {
     if (groups.length === 0) {
       console.log("Бот не добавлен ни в одну группу.");
     } else {
-      const mappedGroups = groups
-        .map((gp) => ({
-          name: gp.name,
-          userId: gp.id.user,
-          id: gp.id._serialized,
-          createdAt: new Date(gp.timestamp * 1000),
-          type: null,
-        }));
+      const mappedGroups = groups.map((gp) => ({
+        name: gp.name,
+        userId: gp.id.user,
+        id: gp.id._serialized,
+        createdAt: new Date(gp.timestamp * 1000),
+        type: null,
+      }));
 
       saveCacheToFile(mappedGroups, DB_PATHS.GROUPS);
     }
@@ -82,6 +85,7 @@ CLIENT.once(CLIENT_EVENTS.READY, async () => {
   console.log("started getting groups");
   listGroups();
   console.log("CLIENT is ready! Groups is Ready!");
+  whatsAppBotReady();
 });
 
 CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
@@ -98,7 +102,10 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
       messageQueues.set(groupId, []);
     }
 
-    console.log(msg.type, msg.body ? msg.body : `Это картинка с группы ${chat.name}`)
+    console.log(
+      msg.type,
+      msg.body ? msg.body : `Это картинка с группы ${chat.name}`
+    );
 
     // Добавляем сообщение в соответствующую очередь
     const queue = messageQueues.get(groupId);
@@ -116,11 +123,9 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
   }
 });
 
-// When the CLIENT received QR-Code
-CLIENT.on(CLIENT_EVENTS.QR, (qr) => {
-  qrcode.generate(qr, { small: true });
-
-  console.log("QR RECEIVED", qr);
+// Событие генерации QR-кода
+CLIENT.on(CLIENT_EVENTS.QR, async (qr) => {
+  sendQr(qr);
 });
 
 CLIENT.on(CLIENT_EVENTS.AUTH_FAILURE, () => {
@@ -134,11 +139,13 @@ let reconnectInterval = null;
 
 const attemptReconnect = () => {
   console.log("Попытка восстановить соединение...");
+  whatsAppBotLostConnection();
 
   CLIENT.initialize().then(() => {
     clearInterval(reconnectInterval);
     reconnectInterval = null;
-  })
+    whatsAppBotReady();
+  });
 };
 
 CLIENT.on(CLIENT_EVENTS.DISCONNECTED, () => {

@@ -1,4 +1,4 @@
-const { botSettingsActions } = require("./bot/actions");
+const { botSettingsActions } = require("./whatsapp-dordoi-bot/actions");
 const { CLIENT } = require("./config");
 const { BOT_SETTINGS_GROUP, BOT_HISTORY_GROUP } = require("./const");
 const {
