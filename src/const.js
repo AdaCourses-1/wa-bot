@@ -36,6 +36,7 @@ const COMMANDS = {
   CLEAR_CHATS: "Удалить все добавленные группы",
   GET_KEYWORDS: "Получить ключевые слова",
   ADD_KEYWORDS: "Добавить ключевые слова",
+  ADD_EXACT_PATHS: "Добавить откуда и куда"
 };
 
 const KEYWORDS_TO_REMOVE = [

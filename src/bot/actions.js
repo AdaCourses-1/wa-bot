@@ -72,16 +72,22 @@ const botSettingsActions = async (msg) => {
     const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
 
     if (!bot) return;
-  
-    let getSourceChats = `Группы откуда берутся товары:\n\n`
-    let getDestChats = `Группы куда скидываются товары:\n\n`
+
+    let getSourceChats = `Группы откуда берутся товары:\n\n`;
+    let getDestChats = `Группы куда скидываются товары:\n\n`;
 
     chats?.forEach((chat) => {
       if (bot.source_chats.includes(chat.id._serialized)) {
-        getSourceChats +=`Название: ${chat.name}\n` + `ID: ${chat.id._serialized}\n` + `\n---\n`
+        getSourceChats +=
+          `Название: ${chat.name}\n` +
+          `ID: ${chat.id._serialized}\n` +
+          `\n---\n`;
       }
       if (bot.dest_chats.includes(chat.id._serialized)) {
-        getDestChats += `Название: ${chat.name}\n` + `ID: ${chat.id._serialized}\n` + `\n---\n`
+        getDestChats +=
+          `Название: ${chat.name}\n` +
+          `ID: ${chat.id._serialized}\n` +
+          `\n---\n`;
       }
     });
 
@@ -94,6 +100,24 @@ const botSettingsActions = async (msg) => {
       console.log(
         `Не смог выполнить команду ${COMMANDS.GET_ADDED_GROUPS}, причина: ${err.message}`
       );
+    }
+  }
+
+  if (command.includes(COMMANDS.ADD_EXACT_PATHS)) {
+    // Регулярное выражение для поиска chat_id
+    const regex = /Откуда:\s*(\w+)\s*Куда:\s*(\w+)/;
+
+    // Применяем регулярное выражение к строке
+    const matches = command.match(regex);
+
+    if (matches) {
+      const chatId1 = matches[1]; 
+      const chatId2 = matches[2];
+
+      console.log(`chatId1: ${chatId1}`, 'SOURCE_CHAT'); // 'CHAT_ID1'
+      console.log(`chatId2: ${chatId2}`, 'DEST_CHAT'); // 'CHAT_ID2'
+    } else {
+      console.log("Не удалось извлечь chat_id");
     }
   }
 };
