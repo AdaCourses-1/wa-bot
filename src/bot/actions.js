@@ -181,14 +181,7 @@ const botSettingsActions = async (msg) => {
 
         await CLIENT.sendMessage(
           BOT_SETTINGS_GROUP.ID,
-          ` Откуда:\n
-            Название:${sourceChat.name}\n
-            ID:${sourceChat.id._serialized}\n\n 
-            
-            Куда:\n
-            Название:${destChat.name}\n
-            ID:${destChat.id._serialized}
-          `
+          `Откуда:\nНазвание:${sourceChat?.name}\nID:${sourceChat?.id?._serialized}\n\nКуда:\nНазвание:${destChat?.name}\nID:${destChat?.id?._serialized}`
         );
       });
     } catch (err) {
