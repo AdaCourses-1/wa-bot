@@ -104,15 +104,38 @@ const botSettingsActions = async (msg) => {
   }
 
   if (command.includes(COMMANDS.ADD_EXACT_PATHS)) {
+    const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+
     try {
       const lines = command.trim().split("\n");
 
       // Извлекаем chat_id1 и chat_id2
-      const chatId1 = lines[1].split(": ")[1];
-      const chatId2 = lines[2].split(": ")[1];
-    
+      const chatId1 = lines[2].split(": ")[1]; // 2 строка
+      const chatId2 = lines[3].split(": ")[1]; // 3 строка
+
       console.log(`chatId1: ${chatId1}`, "SOURCE_CHAT"); // 'CHAT_ID1'
       console.log(`chatId2: ${chatId2}`, "DEST_CHAT"); // 'CHAT_ID2'
+
+      const newExactPath = {
+        source_chat: chatId1,
+        dest_chat: chatId2,
+      };
+
+      if (bot.exact_paths) {
+        const data = {
+          ...bot,
+          exact_paths: [...bot.exact_paths, newExactPath],
+        };
+        saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
+        console.log("exact_paths", data);
+      } else {
+        const data = {
+          ...bot,
+          exact_paths: [newExactPath],
+        };
+        saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
+        console.log("exact_paths", data);
+      }
     } catch (err) {
       console.log("Не удалось извлечь chat_id:", err.message);
     }
