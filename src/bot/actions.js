@@ -34,10 +34,10 @@ const botSettingsActions = async (msg) => {
   if (command === COMMANDS.GET_ALL_COMMANDS) {
     const allCommands = Object.values(COMMANDS);
     try {
-      allCommands.forEach(async (botCommand) => {
+      allCommands.forEach(async (botCommand, index) => {
         await CLIENT.sendMessage(
           BOT_SETTINGS_GROUP.ID,
-          `Команда: ${botCommand}`
+          `${index + 1}. Команда: ${botCommand}`
         );
       });
     } catch (err) {
@@ -169,13 +169,13 @@ const botSettingsActions = async (msg) => {
     try {
       bot.exact_paths?.forEach(async (path) => {
         await CLIENT.sendMessage(
-          BOT_HISTORY_GROUP.ID,
+          BOT_SETTINGS_GROUP.ID,
           `Откуда:${path.source_chat}\n\n Куда:${path.dest_chat}`
         );
       });
     } catch (err) {
       await CLIENT.sendMessage(
-        BOT_HISTORY_GROUP.ID,
+        BOT_SETTINGS_GROUP.ID,
         `Не получилось выполнить команду ${COMMANDS.GET_EXACT_PATHS} по причине:\n\n ${err.message}`
       );
     }
