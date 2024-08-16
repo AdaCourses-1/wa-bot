@@ -4,6 +4,7 @@ const {
   COMMANDS,
   DB_PATHS,
   KEYWORDS_TO_REMOVE,
+  BOT_HISTORY_GROUP,
 } = require("../const");
 const { loadCacheFromFile, saveCacheToFile } = require("../saveGroups");
 
@@ -140,6 +141,48 @@ const botSettingsActions = async (msg) => {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
         `Не получилось реализовать команду ${COMMANDS.ADD_EXACT_PATHS} по причине:\n\n${err.message}`
+      );
+    }
+    return;
+  }
+
+  if (command.includes(COMMANDS.GET_EXACT_PATHS)) {
+    const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+
+    try {
+      bot.exact_paths?.forEach(async (path) => {
+        await CLIENT.sendMessage(
+          BOT_HISTORY_GROUP.ID,
+          `Откуда:${path.source_chat}\n\n Куда:${path.dest_chat}`
+        );
+      });
+    } catch (err) {
+      await CLIENT.sendMessage(
+        BOT_HISTORY_GROUP.ID,
+        `Не получилось выполнить команду ${COMMANDS.GET_EXACT_PATHS} по причине:\n\n ${err.message}`
+      );
+    }
+
+    return;
+  }
+
+  if (command.includes(COMMANDS.CLEAR_EXACT_PATHS)) {
+    const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+    try {
+      const data = {
+        ...bot,
+        exact_paths: [],
+      };
+      saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
+
+      await CLIENT.sendMessage(
+        BOT_SETTINGS_GROUP.ID,
+        `Все группы куда и откуда скидываются товары были удалены!`
+      );
+    } catch (err) {
+      await CLIENT.sendMessage(
+        BOT_SETTINGS_GROUP.ID,
+        `Не получилось куда и откуда скидываются товары удалить по причине:\n\n${err.message}`
       );
     }
   }
