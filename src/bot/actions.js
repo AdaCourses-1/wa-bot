@@ -66,6 +66,35 @@ const botSettingsActions = async (msg) => {
       );
     }
   }
+
+  if (command.includes(COMMANDS.GET_ADDED_GROUPS)) {
+    const chats = await CLIENT.getChats();
+    const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+
+    if (!bot) return;
+  
+    let getSourceChats = `Группы откуда берутся товары:\n\n`
+    let getDestChats = `Группы куда скидываются товары:\n\n`
+
+    chats?.forEach((chat) => {
+      if (bot.source_chats.includes(chat.id._serialized)) {
+        getSourceChats +=`Название: ${chat.name}\n` + `ID: ${chat.id}\n` + `\n---\n`
+      }
+      if (bot.dest_chats.includes(chat.id._serialized)) {
+        getDestChats += `Название: ${chat.name}\n` + `ID: ${chat.id}\n` + `\n---\n`
+      }
+    });
+
+    console.log(`Поступила команда ${COMMANDS.GET_ADDED_GROUPS}, выполняю!`);
+
+    try {
+      await CLIENT.sendMessage(BOT_SETTINGS_GROUP.ID, `${getSourceChats}\n\n${getDestChats}`);
+    } catch (err) {
+      console.log(
+        `Не смог выполнить команду ${COMMANDS.GET_ADDED_GROUPS}, причина: ${err.message}`
+      );
+    }
+  }
 };
 
 module.exports = {
