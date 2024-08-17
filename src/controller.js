@@ -2,7 +2,7 @@ const { botSettingsActions } = require("./whatsapp-dordoi-bot/actions");
 const { CLIENT } = require("./config");
 const { BOT_SETTINGS_GROUP, BOT_HISTORY_GROUP } = require("./const");
 const {
-  destChats,
+  exactPaths,
   generateUniqueId,
   fileSizeInMb,
   isVideoOrImage,
@@ -13,19 +13,22 @@ const {
 let messageQueue = [];
 let isProcessing = false;
 
-const sendToDestChats = async (data, chat) => {
-  if (destChats && destChats.length < 1) return;
+const sendToDestChats = async (data, chat, msg) => {
+  if (exactPaths && Object.keys(exactPaths).length < 1) return;
 
-  for (const chatId of destChats) {
-    await CLIENT.sendMessage(chatId, data);
+  const currentSourceChatId = chat.id._serialized;
+
+  if (!exactPaths[currentSourceChatId]) return;
+
+  for (const destChatId of exactPaths[currentSourceChatId]) {
+    await CLIENT.sendMessage(destChatId, data);
   }
 
   // Отправляем те же сообщения в группу истории бота
-  if (chat) {
+  if (msg) {
     const messageWithHistory = `${data}\n\nИз какой группы: ${chat.name}`;
     await CLIENT.sendMessage(BOT_HISTORY_GROUP.ID, messageWithHistory);
-  }
-  else {
+  } else {
     await CLIENT.sendMessage(BOT_HISTORY_GROUP.ID, data);
   }
 };
@@ -53,7 +56,7 @@ const processQueue = async () => {
           return;
         }
 
-        await sendToDestChats(media);
+        await sendToDestChats(media, chat);
       }
 
       return;
@@ -63,7 +66,7 @@ const processQueue = async () => {
     const textWithoutKeywords = sanitizeMessage(textWithoutLinks); // no keywords
     let message = `${textWithoutKeywords}\n\nАртикул: ${generateUniqueId?.()}\n\nКонтакты: wa.me/996709700433`;
 
-    await sendToDestChats(message, chat);
+    await sendToDestChats(message, chat, msg);
   } catch (err) {
     console.log("Случилась ошибка:", err);
   } finally {
@@ -89,17 +92,31 @@ const onMessageCreated = async (msg) => {
 
   timerId = setTimeout(() => {
     if (!isProcessing) {
-      const firstMessage = messageQueue[0];
-
-      if (firstMessage && firstMessage.msg?.body) {
-        const elements = messageQueue.slice(1).reverse();
-
-        messageQueue = [...elements, firstMessage];
-      }
+      messageQueue = reorderQueue(messageQueue);
 
       processQueue();
     }
   }, 5000);
 };
+
+function reorderQueue(messageQueue) {
+  // Отделяем объекты с полем msg.body от тех, у кого его нет
+  const withBody = messageQueue.find((item) => item.msg?.body);
+  const withoutBody = messageQueue.filter((item) => !item.msg?.body);
+
+  let emptyMessage = withBody;
+
+  if (!withBody || !withBody.length) {
+    emptyMessage = {
+      msg: {
+        body: "Новое поступление!",
+      },
+      chat: withoutBody[0]?.chat,
+    };
+  }
+
+  // Объединяем массивы: сначала объекты без msg.body, затем объекты с msg.body
+  return [...withoutBody, withBody ? { ...withBody } : emptyMessage];
+}
 
 module.exports = { onMessageCreated };

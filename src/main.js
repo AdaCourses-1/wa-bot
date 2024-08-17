@@ -32,36 +32,41 @@ const listGroups = async () => {
   }
 };
 
-const messageQueues = new Map();
+const groupsQueues = new Map();
 let processing = false;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const processQueue = async (groupId) => {
-  const queue = messageQueues.get(groupId);
+  const queue = groupsQueues.get(groupId);
   if (!queue || queue.length === 0) return;
 
   // Устанавливаем флаг обработки
   processing = true;
 
-  console.log("delay started");
-  await delay(15000);
+  console.log("Обработка началась!");
+  await delay(6000);
 
   while (queue.length > 0) {
-    const { msg } = queue.shift();
+    const messages = queue.shift();
 
-    try {
-      await onMessageCreated(msg);
-    } catch (err) {
-      console.error("Ошибка при обработке сообщения:", err);
+    while (messages.length > 0) {
+      const msg = messages.shift();
+
+      try {
+        await onMessageCreated(msg);
+      } catch (err) {
+        console.error("Ошибка при обработке сообщения:", err);
+      }
     }
+
+    await delay(120000);
   }
 
   // Удаляем обработанную очередь
-  messageQueues.delete(groupId);
+  groupsQueues.delete(groupId);
 
-  await delay(15000);
-  console.log("delay ended");
+  console.log("Обработка закончилась!");
 
   // Сбрасываем флаг обработки
   processing = false;
@@ -74,7 +79,7 @@ const processNextQueue = async () => {
   if (processing) return;
 
   // Получаем очередь из первого доступного ключа
-  const groupId = Array.from(messageQueues.keys())[0];
+  const groupId = Array.from(groupsQueues.keys())[0];
   if (groupId) {
     processQueue(groupId);
   }
@@ -97,22 +102,27 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
 
     if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
 
-    // Создаем очередь для группы, если ее нет
-    if (!messageQueues.has(groupId)) {
-      messageQueues.set(groupId, []);
+    if (!groupsQueues.has(groupId)) {
+      groupsQueues.set(groupId, [[]]);
     }
 
-    console.log(
-      msg.type,
-      msg.body ? msg.body : `Это картинка с группы ${chat.name}`
+    const currentGroup = groupsQueues.get(groupId);
+    const currentGroupMessages = currentGroup.at(-1);
+    const currentGroupHasText = currentGroupMessages.some(
+      (message) => message.body
+    );
+    const currentGroupHasMedia = currentGroupMessages.some(
+      (message) => message.hasMedia
     );
 
-    // Добавляем сообщение в соответствующую очередь
-    const queue = messageQueues.get(groupId);
+    console.log(msg.body ? msg.body : `Это картинка c группы: ${chat.name}`);
 
-    if (!queue) return;
-
-    queue.push({ msg });
+    if (currentGroupHasText && currentGroupHasMedia && msg.body) {
+      groupsQueues.set(groupId, [...currentGroup, [msg]]);
+    }
+    else {
+      currentGroupMessages.push(msg);
+    }
 
     // Запускаем обработку, если не было запущено
     if (!processing) {

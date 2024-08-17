@@ -10,6 +10,8 @@ const destChats = loadCacheFromFile(DB_PATHS.BOT_SETTINGS)?.dest_chats || [];
 const sourceChats =
   loadCacheFromFile(DB_PATHS.BOT_SETTINGS)?.source_chats || [];
 
+const exactPaths = loadCacheFromFile(DB_PATHS.BOT_SETTINGS)?.exact_paths;
+
 const generateUniqueId = () => Date.now() + Math.floor(Math.random() * 1000);
 
 const fileSizeInMb = (fileSize) => fileSize / 1024 / 1024 || 0;
@@ -38,7 +40,7 @@ const sanitizeMessage = (body) => {
   });
 
   // Убираем лишние пробелы
-  sanitizedBody = sanitizedBody.replace(/\s+/g, " ").trim();
+  // sanitizedBody = sanitizedBody.replace(/\s+/g, " ").trim();
 
   return sanitizedBody ? sanitizedBody : "Новое поступление!";
 };
@@ -52,7 +54,7 @@ const removeLinksFromText = (body) => {
   });
 
   // Убираем лишние пробелы, которые могли остаться после удаления ссылок
-  formattedBody = formattedBody.replace(/\s{2,}/g, " ").trim();
+  // formattedBody = formattedBody.replace(/\s{2,}/g, " ").trim();
 
   return formattedBody;
 };
@@ -66,4 +68,5 @@ module.exports = {
   shouldBlockThread,
   sanitizeMessage,
   removeLinksFromText,
+  exactPaths
 };

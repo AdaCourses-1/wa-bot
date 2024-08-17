@@ -76,7 +76,7 @@ const botSettingsActions = async (msg) => {
     }
   }
 
-  if (command.includes(COMMANDS.GET_KEYWORDS)) {
+  if (command === COMMANDS.GET_KEYWORDS) {
     try {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
@@ -87,9 +87,10 @@ const botSettingsActions = async (msg) => {
         `Не смог выполнить команду ${COMMANDS.GET_KEYWORDS}, причина: ${err.message}`
       );
     }
+    return;
   }
 
-  if (command.includes(COMMANDS.GET_ADDED_GROUPS)) {
+  if (command === COMMANDS.GET_ADDED_GROUPS) {
     const chats = await CLIENT.getChats();
     const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
 
@@ -123,6 +124,7 @@ const botSettingsActions = async (msg) => {
         `Не смог выполнить команду ${COMMANDS.GET_ADDED_GROUPS}, причина: ${err.message}`
       );
     }
+    return;
   }
 
   if (command.includes(COMMANDS.ADD_EXACT_PATHS)) {
@@ -140,16 +142,34 @@ const botSettingsActions = async (msg) => {
         dest_chat: chatId2,
       };
 
-      if (bot.exact_paths) {
+      const sourceChat = bot.exact_paths?.[chatId1];
+
+      if (sourceChat) {
+        const isGroupAlreadyAdded = sourceChat.includes(chatId2);
+
+        if (isGroupAlreadyAdded) {
+          await CLIENT.sendMessage(
+            BOT_SETTINGS_GROUP.ID,
+            `Эта группа уже была добавлена!`
+          );
+          return;
+        }
+
         const data = {
           ...bot,
-          exact_paths: [...bot.exact_paths, newExactPath],
+          exact_paths: {
+            ...bot.exact_paths,
+            [chatId1]: [...sourceChat, chatId2],
+          },
         };
         saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
       } else {
         const data = {
           ...bot,
-          exact_paths: [newExactPath],
+          exact_paths: {
+            ...bot.exact_paths,
+            [chatId1]: [chatId2],
+          },
         };
         saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
       }
@@ -167,31 +187,40 @@ const botSettingsActions = async (msg) => {
     return;
   }
 
-  if (command.includes(COMMANDS.GET_EXACT_PATHS)) {
-    const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+  if (command === COMMANDS.GET_EXACT_PATHS) {
+    const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+
     const chats = await CLIENT.getChats();
+    const sourceChats = Object.keys(bot.exact_paths);
 
     try {
-      if (!Boolean(bot.exact_paths.length)) {
+      if (!sourceChats.length) {
         return await CLIENT.sendMessage(
           BOT_SETTINGS_GROUP.ID,
-          "Извините, но нечего удалять!"
+          "Извините, но нет добавленных групп!"
         );
       }
 
-      bot.exact_paths?.forEach(async (path) => {
+      for (const savedSourceChatId of sourceChats) {
         const sourceChat = chats.find(
-          (chat) => chat.id._serialized === path.source_chat
+          (chat) => chat.id._serialized === savedSourceChatId
         );
-        const destChat = chats.find(
-          (chat) => chat.id._serialized === path.dest_chat
+        const destChats = chats.filter((chat) =>
+          bot.exact_paths[savedSourceChatId].includes(chat.id._serialized)
         );
+
+        const sourceChatMessage = `Откуда:\nНазвание: ${sourceChat?.name}\nID: ${sourceChat?.id?._serialized}\n\n`;
+        let destChatsMessage = `Куда:\n`;
+
+        for (const destChat of destChats) {
+          destChatsMessage += `Название: ${destChat?.name}\nID: ${destChat?.id?._serialized}\n\n`;
+        }
 
         await CLIENT.sendMessage(
           BOT_SETTINGS_GROUP.ID,
-          `Откуда:\nНазвание:${sourceChat?.name}\nID:${sourceChat?.id?._serialized}\n\nКуда:\nНазвание:${destChat?.name}\nID:${destChat?.id?._serialized}`
+          `${sourceChatMessage}${destChatsMessage}`
         );
-      });
+      }
     } catch (err) {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
@@ -202,7 +231,7 @@ const botSettingsActions = async (msg) => {
     return;
   }
 
-  if (command.includes(COMMANDS.CLEAR_EXACT_PATHS)) {
+  if (command === COMMANDS.CLEAR_EXACT_PATHS) {
     const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
 
     try {
