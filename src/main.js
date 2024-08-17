@@ -51,12 +51,12 @@ processQueue.process(async (job) => {
 
   console.log(`Начата обработка группы: ${groupId}`);
 
-  for (const msg of messages) {
-    try {
+  try {
+    for (const msg of messages) {
       await onMessageCreated(msg);
-    } catch (err) {
-      console.error("Ошибка при обработке сообщения:", err);
     }
+  } catch (err) {
+    console.error("Ошибка при обработке сообщения:", err);
   }
 
   console.log(`Закончена обработка группы: ${groupId}`);
@@ -79,10 +79,20 @@ const addToQueue = async (groupId, msg) => {
     currentGroupMessages.push(msg);
   }
 
-  if (!processQueue.getActiveCount()) {
-    processQueue.add({ groupId, messages: groupQueues.get(groupId).at(-1) });
+  console.log(`Добавление задачи в очередь для группы: ${groupId}, сообщения: ${JSON.stringify(groupQueues.get(groupId).at(-1))}`);
+
+  if (!(await processQueue.getActiveCount())) {
+    await processQueue.add({ groupId, messages: groupQueues.get(groupId).at(-1) });
   }
 };
+
+processQueue.on('failed', (job, err) => {
+  console.error(`Ошибка при обработке задачи для группы: ${job.data.groupId}`, err);
+});
+
+processQueue.on('error', (err) => {
+  console.error('Ошибка в очереди:', err);
+});
 
 CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
   try {
@@ -108,7 +118,7 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
 CLIENT.once(CLIENT_EVENTS.READY, async () => {
   console.log("started getting groups");
   listGroups();
-  console.log("CLIENT is ready! Groups is Ready!");
+  console.log("CLIENT is ready! Groups are Ready!");
   whatsAppBotReady();
 });
 
