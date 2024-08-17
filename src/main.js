@@ -34,25 +34,51 @@ const listGroups = async () => {
 };
 
 const Queue = require('bull');
-const messageQueue = new Queue('messageQueue');
-let processing
 
-// Процессор очереди
-messageQueue.process(async (job) => {
-  const { messages } = job.data;
-  
-  for (let msg of messages) {
+const groupQueues = new Map();
+const processQueue = new Queue('processQueue');
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Обработчик задач в очереди
+processQueue.process(async (job) => {
+  const { groupId, messages } = job.data;
+
+  console.log(`Начата обработка группы: ${groupId}`);
+
+  for (const msg of messages) {
     try {
       await onMessageCreated(msg);
     } catch (err) {
-      console.error('Ошибка при обработке сообщения:', err);
+      console.error("Ошибка при обработке сообщения:", err);
     }
   }
 
-  await delay(60000); // Задержка между пачками сообщений
+  console.log(`Закончена обработка группы: ${groupId}`);
+  await delay(60000); // Задержка между обработкой групп
 });
 
-// Получение нового сообщения
+// Функция добавления сообщений в очередь
+const addToQueue = async (groupId, msg) => {
+  if (!groupQueues.has(groupId)) {
+    groupQueues.set(groupId, []);
+  }
+
+  const currentGroupMessages = groupQueues.get(groupId).at(-1) || [];
+  const currentGroupHasText = currentGroupMessages.some((message) => message.body);
+  const currentGroupHasMedia = currentGroupMessages.some((message) => message.hasMedia);
+
+  if (currentGroupHasText && currentGroupHasMedia && msg.body) {
+    groupQueues.set(groupId, [...groupQueues.get(groupId), [msg]]);
+  } else {
+    currentGroupMessages.push(msg);
+  }
+
+  if (!processQueue.getActiveCount()) {
+    processQueue.add({ groupId, messages: groupQueues.get(groupId).at(-1) });
+  }
+};
+
 CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
   try {
     const chat = await msg.getChat();
@@ -64,30 +90,10 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
     }
 
     const isBlockedThread = shouldBlockThread(groupId);
+
     if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
 
-    const currentGroup = groupsQueues.get(groupId) || [[]];
-    const currentGroupMessages = currentGroup.at(-1);
-
-    const currentGroupHasText = currentGroupMessages.some(
-      (message) => message.body
-    );
-    const currentGroupHasMedia = currentGroupMessages.some(
-      (message) => message.hasMedia
-    );
-
-    if (currentGroupHasText && currentGroupHasMedia && msg.body) {
-      currentGroup.push([msg]);
-    } else {
-      currentGroupMessages.push(msg);
-    }
-
-    groupsQueues.set(groupId, currentGroup);
-
-    if (!processing) {
-      messageQueue.add({ groupId, messages: currentGroupMessages });
-      processing = true;
-    }
+    await addToQueue(groupId, msg);
   } catch (err) {
     console.error("Ошибка получения чата:", err);
   }
