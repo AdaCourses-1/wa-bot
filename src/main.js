@@ -46,13 +46,13 @@ const processQueue = async (groupId) => {
   processing = true;
 
   console.log("Обработка началась!");
-  await delay(6000);
+  await delay(60000);
 
   for (let i = 0; i < queue.length; i++) {
     const messages = queue[i];
 
-    while (messages.length > 0) {
-      const msg = messages.shift();
+    for (let j = 0; j < messages.length; j++) {
+      const msg = messages[j];
 
       try {
         await onMessageCreated(msg);
@@ -61,10 +61,12 @@ const processQueue = async (groupId) => {
       }
     }
 
-    await delay(120000);
+    await delay(60000);
   }
 
   console.log("Обработка закончилась!");
+
+  groupsQueues.set(groupId, [[]])
 
   // Сбрасываем флаг обработки
   processing = false;
@@ -104,7 +106,6 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
       return;
     }
   
-
     const isBlockedThread = shouldBlockThread(groupId);
 
     if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
@@ -115,7 +116,7 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
 
     const currentGroup = groupsQueues.get(groupId);
     const currentGroupMessages = currentGroup.at(-1);
-    console.log(currentGroup, '118')
+    console.log(currentGroupMessages.length, '118')
     const currentGroupHasText = currentGroupMessages?.some(
       (message) => message.body
     );
@@ -132,7 +133,7 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
       currentGroupMessages.push(msg);
     }
 
-    console.log(currentGroup, '135')
+    console.log(currentGroupMessages.length, '135')
 
     // Запускаем обработку, если не было запущено
     if (!processing) {
