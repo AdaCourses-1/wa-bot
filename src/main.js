@@ -64,9 +64,6 @@ const processQueue = async (groupId) => {
     await delay(120000);
   }
 
-  // Удаляем обработанную очередь
-  groupsQueues.delete(groupId);
-
   console.log("Обработка закончилась!");
 
   // Сбрасываем флаг обработки
@@ -83,6 +80,9 @@ const processNextQueue = async () => {
   const groupId = Array.from(groupsQueues.keys())[0];
   if (groupId) {
     processQueue(groupId);
+  }
+  else {
+    groupsQueues.delete(groupId);
   }
 };
 
