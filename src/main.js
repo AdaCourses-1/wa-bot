@@ -109,7 +109,7 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
 
     if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
 
-    if (!groupsQueues.has(groupId)) {
+    if (!groupsQueues.has(groupId) || !groupsQueues.has(groupId).length) {
       groupsQueues.set(groupId, [[]]);
     }
 
@@ -132,7 +132,7 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
       currentGroupMessages.push(msg);
     }
 
-    console.log(currentGroup, '118')
+    console.log(currentGroup, '135')
 
     // Запускаем обработку, если не было запущено
     if (!processing) {
