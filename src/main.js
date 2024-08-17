@@ -33,69 +33,26 @@ const listGroups = async () => {
   }
 };
 
-const groupsQueues = new Map();
-let processing = false;
+const Queue = require('bull');
+const messageQueue = new Queue('messageQueue');
+let processing
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const processQueue = async (groupId) => {
-  const queue = groupsQueues.get(groupId);
-  if (!queue || queue.length === 0) return;
-
-  // Устанавливаем флаг обработки
-  processing = true;
-
-  console.log("Обработка началась!");
-  await delay(60000);
-
-  for (let i = 0; i < queue.length; i++) {
-    const messages = queue[i];
-
-    for (let j = 0; j < messages.length; j++) {
-      const msg = messages[j];
-
-      try {
-        await onMessageCreated(msg);
-      } catch (err) {
-        console.error("Ошибка при обработке сообщения:", err);
-      }
+// Процессор очереди
+messageQueue.process(async (job) => {
+  const { messages } = job.data;
+  
+  for (let msg of messages) {
+    try {
+      await onMessageCreated(msg);
+    } catch (err) {
+      console.error('Ошибка при обработке сообщения:', err);
     }
-
-    await delay(60000);
   }
 
-  console.log("Обработка закончилась!");
-
-  groupsQueues.set(groupId, [[]])
-
-  // Сбрасываем флаг обработки
-  processing = false;
-
-  // Обрабатываем следующую очередь
-  processNextQueue();
-};
-
-const processNextQueue = async () => {
-  if (processing) return;
-
-  // Получаем очередь из первого доступного ключа
-  const groupId = Array.from(groupsQueues.keys())[0];
-  if (groupId) {
-    processQueue(groupId);
-  }
-  else {
-    groupsQueues.delete(groupId);
-  }
-};
-
-// When the CLIENT is ready, run this code (only once)
-CLIENT.once(CLIENT_EVENTS.READY, async () => {
-  console.log("started getting groups");
-  listGroups();
-  console.log("CLIENT is ready! Groups is Ready!");
-  whatsAppBotReady();
+  await delay(60000); // Задержка между пачками сообщений
 });
 
+// Получение нового сообщения
 CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
   try {
     const chat = await msg.getChat();
@@ -105,43 +62,43 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
       await botSettingsActions(msg);
       return;
     }
-  
-    const isBlockedThread = shouldBlockThread(groupId);
 
+    const isBlockedThread = shouldBlockThread(groupId);
     if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
 
-    if (!groupsQueues.has(groupId) || !groupsQueues.has(groupId).length) {
-      groupsQueues.set(groupId, [[]]);
-    }
-
-    const currentGroup = groupsQueues.get(groupId);
+    const currentGroup = groupsQueues.get(groupId) || [[]];
     const currentGroupMessages = currentGroup.at(-1);
-    console.log(currentGroupMessages.length, '118')
-    const currentGroupHasText = currentGroupMessages?.some(
+
+    const currentGroupHasText = currentGroupMessages.some(
       (message) => message.body
     );
-    const currentGroupHasMedia = currentGroupMessages?.some(
+    const currentGroupHasMedia = currentGroupMessages.some(
       (message) => message.hasMedia
     );
 
-    console.log(msg.body ? msg.body : `Это картинка c группы: ${chat.name}`);
-
     if (currentGroupHasText && currentGroupHasMedia && msg.body) {
-      groupsQueues.set(groupId, [...currentGroup, [msg]]);
-    }
-    else {
+      currentGroup.push([msg]);
+    } else {
       currentGroupMessages.push(msg);
     }
 
-    console.log(currentGroupMessages.length, '135')
+    groupsQueues.set(groupId, currentGroup);
 
-    // Запускаем обработку, если не было запущено
     if (!processing) {
-      processNextQueue();
+      messageQueue.add({ groupId, messages: currentGroupMessages });
+      processing = true;
     }
   } catch (err) {
     console.error("Ошибка получения чата:", err);
   }
+});
+
+// When the CLIENT is ready, run this code (only once)
+CLIENT.once(CLIENT_EVENTS.READY, async () => {
+  console.log("started getting groups");
+  listGroups();
+  console.log("CLIENT is ready! Groups is Ready!");
+  whatsAppBotReady();
 });
 
 // Событие генерации QR-кода
