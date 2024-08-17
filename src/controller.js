@@ -1,6 +1,5 @@
-const { botSettingsActions } = require("./whatsapp-dordoi-bot/actions");
 const { CLIENT } = require("./config");
-const { BOT_SETTINGS_GROUP, BOT_HISTORY_GROUP } = require("./const");
+const { BOT_HISTORY_GROUP } = require("./const");
 const {
   exactPaths,
   generateUniqueId,
@@ -80,12 +79,6 @@ let timerId = 0;
 const onMessageCreated = async (msg) => {
   clearTimeout(timerId);
   const chat = await msg.getChat();
-
-  if (BOT_SETTINGS_GROUP.ID == chat.id._serialized) {
-    await botSettingsActions(msg);
-    isProcessing = false;
-    return;
-  }
 
   // Добавление сообщения в очередь с проверкой типа
   messageQueue.push({ msg, chat });

@@ -1,5 +1,5 @@
 const { onMessageCreated } = require("./controller");
-const { CLIENT_EVENTS, DB_PATHS } = require("./const");
+const { CLIENT_EVENTS, DB_PATHS, BOT_SETTINGS_GROUP } = require("./const");
 const { CLIENT } = require("./config");
 const { saveCacheToFile } = require("./saveGroups");
 const { shouldBlockThread } = require("./utils");
@@ -8,6 +8,7 @@ const {
   whatsAppBotReady,
   whatsAppBotLostConnection,
 } = require("./telegram-notifier-bot/actions");
+const { botSettingsActions } = require("./whatsapp-dordoi-bot/actions");
 
 const listGroups = async () => {
   try {
@@ -97,6 +98,12 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
   try {
     const chat = await msg.getChat();
     const groupId = chat.id._serialized;
+
+    if (BOT_SETTINGS_GROUP.ID == chat.id._serialized) {
+      await botSettingsActions(msg);
+      return;
+    }
+  
 
     const isBlockedThread = shouldBlockThread(groupId);
 

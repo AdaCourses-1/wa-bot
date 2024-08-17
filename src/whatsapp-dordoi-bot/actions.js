@@ -191,7 +191,7 @@ const botSettingsActions = async (msg) => {
     const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
 
     const chats = await CLIENT.getChats();
-    const sourceChats = Object.keys(bot.exact_paths);
+    const sourceChats = Object.keys(bot.exact_paths || {});
 
     try {
       if (!sourceChats.length) {
