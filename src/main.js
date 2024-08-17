@@ -45,6 +45,14 @@ const processQueue = new Queue('processQueue', {
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+processQueue.on('completed', (job, result) => {
+  console.log(`Задача завершена для группы: ${job.data.groupId}`);
+});
+
+processQueue.on('stalled', (job) => {
+  console.log(`Задача застряла для группы: ${job.data.groupId}`);
+});
+
 // Обработчик задач в очереди
 processQueue.process(async (job) => {
   const { groupId, messages } = job.data;
