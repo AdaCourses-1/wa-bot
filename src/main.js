@@ -115,6 +115,7 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
 
     const currentGroup = groupsQueues.get(groupId);
     const currentGroupMessages = currentGroup.at(-1);
+    console.log(currentGroupMessages)
     const currentGroupHasText = currentGroupMessages.some(
       (message) => message.body
     );
