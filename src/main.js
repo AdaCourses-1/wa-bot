@@ -36,7 +36,12 @@ const listGroups = async () => {
 const Queue = require('bull');
 
 const groupQueues = new Map();
-const processQueue = new Queue('processQueue');
+const processQueue = new Queue('processQueue', {
+  redis: {
+    host: '127.0.0.1', // или IP-адрес, если Redis находится на другом сервере
+    port: 6379, // стандартный порт Redis
+  },
+});
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
