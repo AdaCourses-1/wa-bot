@@ -48,8 +48,8 @@ const processQueue = async (groupId) => {
   console.log("Обработка началась!");
   await delay(6000);
 
-  while (queue.length > 0) {
-    const messages = queue.shift();
+  for (let i = 0; i < queue.length; i++) {
+    const messages = queue[i];
 
     while (messages.length > 0) {
       const msg = messages.shift();
