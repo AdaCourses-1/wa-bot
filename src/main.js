@@ -115,7 +115,7 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
 
     const currentGroup = groupsQueues.get(groupId);
     const currentGroupMessages = currentGroup.at(-1);
-    console.log(currentGroup)
+    console.log(currentGroup, '118')
     const currentGroupHasText = currentGroupMessages?.some(
       (message) => message.body
     );
@@ -131,6 +131,8 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
     else {
       currentGroupMessages.push(msg);
     }
+
+    console.log(currentGroup, '118')
 
     // Запускаем обработку, если не было запущено
     if (!processing) {
