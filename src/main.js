@@ -34,14 +34,13 @@ const listGroups = async () => {
   }
 };
 
-const messageQueues = new Map();
 let processing = false;
 let groups = {};
 let stopBot = null;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const processQueue = async (groupId) => {
+const processQueue = async () => {
   // Устанавливаем флаг обработки
   processing = true;
 
@@ -92,7 +91,7 @@ CLIENT.once(CLIENT_EVENTS.READY, async () => {
   console.log("started getting groups");
   listGroups();
   console.log("CLIENT is ready! Groups is Ready!");
-  // whatsAppBotReady?.();
+  whatsAppBotReady?.();
 });
 
 CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
@@ -119,11 +118,6 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
 
     if (!groups[groupId]) {
       groups[groupId] = [];
-    }
-
-    // Создаем очередь для группы, если ее нет
-    if (!messageQueues.has(groupId)) {
-      messageQueues.set(groupId, []);
     }
 
     const isText = msg.body;
