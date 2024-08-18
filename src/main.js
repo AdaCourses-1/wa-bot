@@ -98,12 +98,11 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
   try {
     const chat = await msg.getChat();
     const groupId = chat.id._serialized;
-
+    console.log(msg.body ? msg.body : 'media:', msg.hasMedia)
+    console.log('groupId', groupId, 'name', chat.name)
     const isBlockedThread = shouldBlockThread(groupId);
 
     if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
-
-    console.log(msg.body ? msg.body : 'media:', msg.hasMedia)
 
     if (BOT_SETTINGS_GROUP.ID === groupId) {
       await botSettingsActions(msg);
