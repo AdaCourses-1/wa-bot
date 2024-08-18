@@ -94,12 +94,15 @@ const addToQueue = async (groupId, msg) => {
     groupQueues.set(groupId, [...groupQueues.get(groupId), [msg]]);
   } else {
     currentGroupMessages.push(msg);
+    groupQueues.set(groupId, [...groupQueues.get(groupId).slice(0, -1), currentGroupMessages]);
   }
 
   const lastQueueItem = groupQueues.get(groupId).at(-1);
 
+  // Проверка и инициализация lastQueueItem как массива
   if (!Array.isArray(lastQueueItem)) {
     console.error(`Ошибка: последняя очередь для группы ${groupId} не является массивом`, lastQueueItem);
+    groupQueues.set(groupId, [...groupQueues.get(groupId), []]);
     return;
   }
 
