@@ -9,6 +9,7 @@ const {
   whatsAppBotLostConnection,
 } = require("./telegram-notifier-bot/actions");
 const { botSettingsActions } = require("./whatsapp-dordoi-bot/actions");
+// const qrcode = require("qrcode-terminal");
 
 const listGroups = async () => {
   try {
@@ -36,34 +37,34 @@ const listGroups = async () => {
 const messageQueues = new Map();
 let processing = false;
 let groups = {};
+let stopBot = null;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const processQueue = async (groupId) => {
-  const queue = messageQueues.get(groupId);
-  if (!queue || queue.length === 0) return;
-
   // Устанавливаем флаг обработки
   processing = true;
 
   console.log("delay started");
-  await delay(15000);
+  await delay(60000);
 
-  console.log(groups)
+  console.log(groups);
+  const groupKeys = Object.keys(groups);
 
-  while (queue.length > 0) {
-    const { msg } = queue.shift();
+  for (const groupKey of groupKeys) {
+    const messages = groups[groupKey].shift();
 
-    try {
-      await onMessageCreated(msg);
-    } catch (err) {
-      console.error("Ошибка при обработке сообщения:", err);
+    console.log("messages", messages.length);
+
+    for (const message of messages) {
+      await onMessageCreated(message);
     }
+
+    await delay(60000);
   }
 
   // Удаляем обработанную очередь
-  messageQueues.delete(groupId);
-
+  console.log(groups, "splicedGroups");
   await delay(15000);
   console.log("delay ended");
 
@@ -77,11 +78,13 @@ const processQueue = async (groupId) => {
 const processNextQueue = async () => {
   if (processing) return;
 
-  // Получаем очередь из первого доступного ключа
-  const groupId = Array.from(messageQueues.keys())[0];
-  if (groupId) {
-    processQueue(groupId);
+  const [groupValues] = Object.values(groups);
+
+  if (groupValues.length > 0) {
+    processQueue();
   }
+
+  console.log('groupValues', groupValues)
 };
 
 // When the CLIENT is ready, run this code (only once)
@@ -89,7 +92,7 @@ CLIENT.once(CLIENT_EVENTS.READY, async () => {
   console.log("started getting groups");
   listGroups();
   console.log("CLIENT is ready! Groups is Ready!");
-  whatsAppBotReady();
+  // whatsAppBotReady?.();
 });
 
 CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
@@ -105,6 +108,14 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
       await botSettingsActions(msg);
       return;
     }
+
+    if (msg.body === '/start') {
+      stopBot = false;
+    }
+    if (msg.body === '/stop') {
+      stopBot = true;
+    }
+    if (stopBot) return;
 
     if (!groups[groupId]) {
       groups[groupId] = [];
@@ -127,7 +138,16 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
     if (currentMessageGroupHasText && currentMessageGroupHasMedia && isText) {
       groups[groupId].push([msg]);
     } else {
-      groups[groupId] = [...groups[groupId], [...currentGroup, msg]];
+      // Добавить сообщение в поледний массив
+      currentGroup.push(msg);
+
+      // Если currentGroup был undefined, обновить последний массив
+      if (
+        groups[groupId].length === 0 ||
+        groups[groupId].at(-1) !== currentGroup
+      ) {
+        groups[groupId].push(currentGroup);
+      }
     }
 
     console.log(
@@ -135,17 +155,8 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
       msg.body ? msg.body : `Это картинка с группы ${chat.name}`
     );
 
-    // Добавляем сообщение в соответствующую очередь
-    const queue = messageQueues.get(groupId);
-
-    if (!queue) return;
-
-    queue.push({ msg });
-
     // Запускаем обработку, если не было запущено
-    if (!processing) {
-      processNextQueue();
-    }
+    processNextQueue();
   } catch (err) {
     console.error("Ошибка получения чата:", err);
   }
@@ -153,7 +164,8 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
 
 // Событие генерации QR-кода
 CLIENT.on(CLIENT_EVENTS.QR, async (qr) => {
-  sendQr(qr);
+  sendQr?.(qr);
+  // qrcode.generate(qr, { small: true });
 });
 
 CLIENT.on(CLIENT_EVENTS.AUTH_FAILURE, () => {
@@ -167,12 +179,12 @@ let reconnectInterval = null;
 
 const attemptReconnect = () => {
   console.log("Попытка восстановить соединение...");
-  whatsAppBotLostConnection();
+  whatsAppBotLostConnection?.();
 
   CLIENT.initialize().then(() => {
     clearInterval(reconnectInterval);
     reconnectInterval = null;
-    whatsAppBotReady();
+    whatsAppBotReady?.();
   });
 };
 
