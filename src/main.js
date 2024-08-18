@@ -9,7 +9,7 @@ const {
   whatsAppBotLostConnection,
 } = require("./telegram-notifier-bot/actions");
 const { botSettingsActions } = require("./whatsapp-dordoi-bot/actions");
-const Queue = require('bull');
+const Queue = require("bull");
 
 const listGroups = async () => {
   try {
@@ -35,24 +35,28 @@ const listGroups = async () => {
 };
 
 const groupQueues = new Map();
-const processQueue = new Queue('processQueue', {
+const processQueue = new Queue("processQueue", {
   redis: {
-    host: '127.0.0.1',
+    host: "127.0.0.1",
     port: 6379,
+  },
+  limiter: {
+    max: 1, // Максимальное количество одновременно обрабатываемых задач
+    duration: 5000, // Продолжительность в миллисекундах
   },
 });
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-processQueue.on('error', (err) => {
-  console.error('Ошибка подключения к Redis:', err);
+processQueue.on("error", (err) => {
+  console.error("Ошибка подключения к Redis:", err);
 });
 
-processQueue.on('completed', (job, result) => {
+processQueue.on("completed", (job, result) => {
   console.log(`Задача завершена для группы: ${job.data.groupId}`);
 });
 
-processQueue.on('stalled', (job) => {
+processQueue.on("stalled", (job) => {
   console.log(`Задача застряла для группы: ${job.data.groupId}`);
 });
 
@@ -62,7 +66,10 @@ processQueue.process(async (job) => {
   const { groupId, messages } = job.data;
 
   if (!Array.isArray(messages)) {
-    console.error(`Ошибка: messages не является массивом для группы ${groupId}`, messages);
+    console.error(
+      `Ошибка: messages не является массивом для группы ${groupId}`,
+      messages
+    );
     return;
   }
 
@@ -70,7 +77,9 @@ processQueue.process(async (job) => {
 
   try {
     for (const msgData of messages) {
-      console.log(`Обработка сообщения: ${JSON.stringify(msgData.id._serialized)}`);
+      console.log(
+        `Обработка сообщения: ${JSON.stringify(msgData.id._serialized)}`
+      );
       const msg = await CLIENT.getMessageById(String(msgData.id._serialized));
       await onMessageCreated(msg);
     }
@@ -88,37 +97,47 @@ const addToQueue = async (groupId, msg) => {
   }
 
   const currentGroupMessages = groupQueues.get(groupId).at(-1) || [];
-  const currentGroupHasText = currentGroupMessages.some((message) => message.body);
-  const currentGroupHasMedia = currentGroupMessages.some((message) => message.hasMedia);
+  const currentGroupHasText = currentGroupMessages.some(
+    (message) => message.body
+  );
+  const currentGroupHasMedia = currentGroupMessages.some(
+    (message) => message.hasMedia
+  );
 
   if (currentGroupHasText && currentGroupHasMedia && msg.body) {
     groupQueues.get(groupId).push([msg]);
   } else {
     currentGroupMessages.push(msg);
-    groupQueues.set(groupId, [...groupQueues.get(groupId).slice(0, -1), currentGroupMessages]);
+    groupQueues.set(groupId, [
+      ...groupQueues.get(groupId).slice(0, -1),
+      currentGroupMessages,
+    ]);
   }
 
   const lastQueueItem = groupQueues.get(groupId).at(-1);
 
   if (!Array.isArray(lastQueueItem)) {
-    console.error(`Ошибка: последняя очередь для группы ${groupId} не является массивом`, lastQueueItem);
+    console.error(
+      `Ошибка: последняя очередь для группы ${groupId} не является массивом`,
+      lastQueueItem
+    );
     groupQueues.set(groupId, [...groupQueues.get(groupId), []]);
     return;
   }
 
   console.log(`Добавление задачи в очередь для группы: ${groupId}`);
-
-  if (!(await processQueue.getActiveCount())) {
-    await processQueue.add({ groupId, messages: lastQueueItem });
-  }
+  await processQueue.add({ groupId, messages: lastQueueItem });
 };
 
-processQueue.on('failed', (job, err) => {
-  console.error(`Ошибка при обработке задачи для группы: ${job.data.groupId}`, err);
+processQueue.on("failed", (job, err) => {
+  console.error(
+    `Ошибка при обработке задачи для группы: ${job.data.groupId}`,
+    err
+  );
 });
 
-processQueue.on('error', (err) => {
-  console.error('Ошибка в очереди:', err);
+processQueue.on("error", (err) => {
+  console.error("Ошибка в очереди:", err);
 });
 
 CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
