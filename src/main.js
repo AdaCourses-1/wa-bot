@@ -9,6 +9,7 @@ const {
   whatsAppBotLostConnection,
 } = require("./telegram-notifier-bot/actions");
 const { botSettingsActions } = require("./whatsapp-dordoi-bot/actions");
+const Queue = require('bull');
 
 const listGroups = async () => {
   try {
@@ -33,16 +34,13 @@ const listGroups = async () => {
   }
 };
 
-const Queue = require('bull');
-
 const groupQueues = new Map();
 const processQueue = new Queue('processQueue', {
   redis: {
-    host: '127.0.0.1', // или IP-адрес, если Redis находится на другом сервере
-    port: 6379, // стандартный порт Redis
+    host: '127.0.0.1',
+    port: 6379,
   },
 });
-
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -58,14 +56,21 @@ processQueue.on('stalled', (job) => {
   console.log(`Задача застряла для группы: ${job.data.groupId}`);
 });
 
-// Обработчик задач в очереди
 processQueue.process(async (job) => {
+  console.log(`Получены данные задачи: ${JSON.stringify(job.data)}`);
+
   const { groupId, messages } = job.data;
+
+  if (!Array.isArray(messages)) {
+    console.error(`Ошибка: messages не является массивом для группы ${groupId}`, messages);
+    return;
+  }
 
   console.log(`Начата обработка группы: ${groupId}`);
 
   try {
     for (const msg of messages) {
+      console.log(`Обработка сообщения: ${JSON.stringify(msg)}`);
       await onMessageCreated(msg);
     }
   } catch (err) {
@@ -76,7 +81,6 @@ processQueue.process(async (job) => {
   await delay(60000); // Задержка между обработкой групп
 });
 
-// Функция добавления сообщений в очередь
 const addToQueue = async (groupId, msg) => {
   if (!groupQueues.has(groupId)) {
     groupQueues.set(groupId, []);
@@ -92,10 +96,17 @@ const addToQueue = async (groupId, msg) => {
     currentGroupMessages.push(msg);
   }
 
-  console.log(`Добавление задачи в очередь для группы: ${groupId}, сообщения: ${JSON.stringify(groupQueues.get(groupId).at(-1))}`);
+  const lastQueueItem = groupQueues.get(groupId).at(-1);
+
+  if (!Array.isArray(lastQueueItem)) {
+    console.error(`Ошибка: последняя очередь для группы ${groupId} не является массивом`, lastQueueItem);
+    return;
+  }
+
+  console.log(`Добавление задачи в очередь для группы: ${groupId}, сообщения: ${JSON.stringify(lastQueueItem)}`);
 
   if (!(await processQueue.getActiveCount())) {
-    await processQueue.add({ groupId, messages: groupQueues.get(groupId).at(-1) });
+    await processQueue.add({ groupId, messages: lastQueueItem });
   }
 };
 
@@ -112,7 +123,7 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
     const chat = await msg.getChat();
     const groupId = chat.id._serialized;
 
-    if (BOT_SETTINGS_GROUP.ID == chat.id._serialized) {
+    if (BOT_SETTINGS_GROUP.ID === groupId) {
       await botSettingsActions(msg);
       return;
     }
@@ -127,7 +138,6 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
   }
 });
 
-// When the CLIENT is ready, run this code (only once)
 CLIENT.once(CLIENT_EVENTS.READY, async () => {
   console.log("started getting groups");
   listGroups();
@@ -135,7 +145,6 @@ CLIENT.once(CLIENT_EVENTS.READY, async () => {
   whatsAppBotReady();
 });
 
-// Событие генерации QR-кода
 CLIENT.on(CLIENT_EVENTS.QR, async (qr) => {
   sendQr(qr);
 });
@@ -144,7 +153,6 @@ CLIENT.on(CLIENT_EVENTS.AUTH_FAILURE, () => {
   console.error("Ошибка авторизации!");
 });
 
-// Start your CLIENT
 CLIENT.initialize();
 
 let reconnectInterval = null;
