@@ -43,7 +43,12 @@ const processQueue = new Queue('processQueue', {
   },
 });
 
+
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+processQueue.on('error', (err) => {
+  console.error('Ошибка подключения к Redis:', err);
+});
 
 processQueue.on('completed', (job, result) => {
   console.log(`Задача завершена для группы: ${job.data.groupId}`);
