@@ -71,7 +71,7 @@ processQueue.process(async (job) => {
   try {
     for (const msgData of messages) {
       console.log(`Обработка сообщения: ${JSON.stringify(msgData.id._serialized)}`);
-      const msg = await CLIENT.getMessageById(String(msgData.id._serialized))
+      const msg = await CLIENT.getMessageById(String(msgData.id._serialized));
       await onMessageCreated(msg);
     }
   } catch (err) {
@@ -92,7 +92,7 @@ const addToQueue = async (groupId, msg) => {
   const currentGroupHasMedia = currentGroupMessages.some((message) => message.hasMedia);
 
   if (currentGroupHasText && currentGroupHasMedia && msg.body) {
-    groupQueues.set(groupId, [...groupQueues.get(groupId), [msg]]);
+    groupQueues.get(groupId).push([msg]);
   } else {
     currentGroupMessages.push(msg);
     groupQueues.set(groupId, [...groupQueues.get(groupId).slice(0, -1), currentGroupMessages]);
@@ -100,7 +100,6 @@ const addToQueue = async (groupId, msg) => {
 
   const lastQueueItem = groupQueues.get(groupId).at(-1);
 
-  // Проверка и инициализация lastQueueItem как массива
   if (!Array.isArray(lastQueueItem)) {
     console.error(`Ошибка: последняя очередь для группы ${groupId} не является массивом`, lastQueueItem);
     groupQueues.set(groupId, [...groupQueues.get(groupId), []]);
