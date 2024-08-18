@@ -69,9 +69,9 @@ processQueue.process(async (job) => {
   console.log(`Начата обработка группы: ${groupId}`);
 
   try {
-    for (const msg of messages) {
+    for (const msgData of messages) {
       console.log(`Обработка сообщения: ${JSON.stringify(msg.body)}`);
-      console.log(messages.length)
+      const msg = await CLIENT.getMessageById(msgData.id)
       await onMessageCreated(msg);
     }
   } catch (err) {
