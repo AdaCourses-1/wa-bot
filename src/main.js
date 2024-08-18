@@ -103,6 +103,8 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
 
     if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
 
+    console.log(msg.body ? msg.body : 'media:', msg.hasMedia)
+
     if (BOT_SETTINGS_GROUP.ID === groupId) {
       await botSettingsActions(msg);
       return;
