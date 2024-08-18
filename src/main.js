@@ -70,7 +70,7 @@ processQueue.process(async (job) => {
 
   try {
     for (const msg of messages) {
-      console.log(`Обработка сообщения: ${JSON.stringify(msg)}`);
+      console.log(`Обработка сообщения: ${JSON.stringify(msg.body)}`);
       await onMessageCreated(msg);
     }
   } catch (err) {
