@@ -9,7 +9,6 @@ const {
   whatsAppBotLostConnection,
 } = require("./telegram-notifier-bot/actions");
 const { botSettingsActions } = require("./whatsapp-dordoi-bot/actions");
-const Queue = require("bull");
 
 const listGroups = async () => {
   try {
@@ -34,110 +33,64 @@ const listGroups = async () => {
   }
 };
 
-const groupQueues = new Map();
-const processQueue = new Queue("processQueue", {
-  redis: {
-    host: "127.0.0.1",
-    port: 6379,
-  },
-  limiter: {
-    max: 1, // Максимальное количество одновременно обрабатываемых задач
-    duration: 5000, // Продолжительность в миллисекундах
-  },
-});
+const messageQueues = new Map();
+let processing = false;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-processQueue.on("error", (err) => {
-  console.error("Ошибка подключения к Redis:", err);
-});
+const processQueue = async (groupId) => {
+  const queue = messageQueues.get(groupId);
+  if (!queue || queue.length === 0) return;
 
-processQueue.on("completed", (job, result) => {
-  console.log(`Задача завершена для группы: ${job.data.groupId}`);
-});
+  // Устанавливаем флаг обработки
+  processing = true;
 
-processQueue.on("stalled", (job) => {
-  console.log(`Задача застряла для группы: ${job.data.groupId}`);
-});
+  console.log("delay started");
+  await delay(15000);
 
-processQueue.process(async (job) => {
-  console.log(`Получены данные задачи: ${JSON.stringify(job.data)}`);
+  while (queue.length > 0) {
+    const { msg } = queue.shift();
 
-  const { groupId, messages } = job.data;
-
-  if (!Array.isArray(messages)) {
-    console.error(
-      `Ошибка: messages не является массивом для группы ${groupId}`,
-      messages
-    );
-    return;
-  }
-
-  console.log(`Начата обработка группы: ${groupId}`);
-
-  try {
-    for (const msgData of messages) {
-      console.log(
-        `Обработка сообщения: ${JSON.stringify(msgData.id._serialized)}`
-      );
-      const msg = await CLIENT.getMessageById(String(msgData.id._serialized));
-      await onMessageCreated(msg);
+    if (msg.body) {
+      await delay(10000)
     }
-  } catch (err) {
-    console.error("Ошибка при обработке сообщения:", err);
+
+    try {
+      await onMessageCreated(msg);
+    } catch (err) {
+      console.error("Ошибка при обработке сообщения:", err);
+    }
   }
 
-  console.log(`Закончена обработка группы: ${groupId}`);
-  await delay(60000); // Задержка между обработкой групп
-});
+  // Удаляем обработанную очередь
+  messageQueues.delete(groupId);
 
-const addToQueue = async (groupId, msg) => {
-  if (!groupQueues.has(groupId)) {
-    groupQueues.set(groupId, []);
-  }
+  await delay(15000);
+  console.log("delay ended");
 
-  const currentGroupMessages = groupQueues.get(groupId).at(-1) || [];
-  const currentGroupHasText = currentGroupMessages.some(
-    (message) => message.body
-  );
-  const currentGroupHasMedia = currentGroupMessages.some(
-    (message) => message.hasMedia
-  );
+  // Сбрасываем флаг обработки
+  processing = false;
 
-  if (currentGroupHasText && currentGroupHasMedia && msg.body) {
-    groupQueues.get(groupId).push([msg]);
-  } else {
-    currentGroupMessages.push(msg);
-    groupQueues.set(groupId, [
-      ...groupQueues.get(groupId).slice(0, -1),
-      currentGroupMessages,
-    ]);
-  }
-
-  const lastQueueItem = groupQueues.get(groupId).at(-1);
-
-  if (!Array.isArray(lastQueueItem)) {
-    console.error(
-      `Ошибка: последняя очередь для группы ${groupId} не является массивом`,
-      lastQueueItem
-    );
-    groupQueues.set(groupId, [...groupQueues.get(groupId), []]);
-    return;
-  }
-
-  console.log(`Добавление задачи в очередь для группы: ${groupId}`);
-  await processQueue.add({ groupId, messages: lastQueueItem });
+  // Обрабатываем следующую очередь
+  processNextQueue();
 };
 
-processQueue.on("failed", (job, err) => {
-  console.error(
-    `Ошибка при обработке задачи для группы: ${job.data.groupId}`,
-    err
-  );
-});
+const processNextQueue = async () => {
+  if (processing) return;
 
-processQueue.on("error", (err) => {
-  console.error("Ошибка в очереди:", err);
+  // Получаем очередь из первого доступного ключа
+  const groupId = Array.from(messageQueues.keys())[0];
+  if (groupId) {
+    processQueue(groupId);
+  }
+};
+
+// When the CLIENT is ready, run this code (only once)
+CLIENT.once(CLIENT_EVENTS.READY, async () => {
+  console.log("started getting groups");
+  listGroups();
+  console.log("CLIENT is ready! Groups is Ready!");
+  whatsAppBotReady();
 });
 
 CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
@@ -145,28 +98,42 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
     const chat = await msg.getChat();
     const groupId = chat.id._serialized;
 
+    const isBlockedThread = shouldBlockThread(groupId);
+
+    if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
+
     if (BOT_SETTINGS_GROUP.ID === groupId) {
       await botSettingsActions(msg);
       return;
     }
 
-    const isBlockedThread = shouldBlockThread(groupId);
+    // Создаем очередь для группы, если ее нет
+    if (!messageQueues.has(groupId)) {
+      messageQueues.set(groupId, []);
+    }
 
-    if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
+    console.log(
+      msg.type,
+      msg.body ? msg.body : `Это картинка с группы ${chat.name}`
+    );
 
-    await addToQueue(groupId, msg);
+    // Добавляем сообщение в соответствующую очередь
+    const queue = messageQueues.get(groupId);
+
+    if (!queue) return;
+
+    queue.push({ msg });
+
+    // Запускаем обработку, если не было запущено
+    if (!processing) {
+      processNextQueue();
+    }
   } catch (err) {
     console.error("Ошибка получения чата:", err);
   }
 });
 
-CLIENT.once(CLIENT_EVENTS.READY, async () => {
-  console.log("started getting groups");
-  listGroups();
-  console.log("CLIENT is ready! Groups are Ready!");
-  whatsAppBotReady();
-});
-
+// Событие генерации QR-кода
 CLIENT.on(CLIENT_EVENTS.QR, async (qr) => {
   sendQr(qr);
 });
@@ -175,6 +142,7 @@ CLIENT.on(CLIENT_EVENTS.AUTH_FAILURE, () => {
   console.error("Ошибка авторизации!");
 });
 
+// Start your CLIENT
 CLIENT.initialize();
 
 let reconnectInterval = null;
