@@ -71,6 +71,7 @@ processQueue.process(async (job) => {
   try {
     for (const msg of messages) {
       console.log(`Обработка сообщения: ${JSON.stringify(msg.body)}`);
+      console.log(messages.length)
       await onMessageCreated(msg);
     }
   } catch (err) {
@@ -106,7 +107,7 @@ const addToQueue = async (groupId, msg) => {
     return;
   }
 
-  console.log(`Добавление задачи в очередь для группы: ${groupId}, сообщения: ${JSON.stringify(lastQueueItem)}`);
+  console.log(`Добавление задачи в очередь для группы: ${groupId}`);
 
   if (!(await processQueue.getActiveCount())) {
     await processQueue.add({ groupId, messages: lastQueueItem });
