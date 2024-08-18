@@ -35,6 +35,7 @@ const listGroups = async () => {
 
 const messageQueues = new Map();
 let processing = false;
+let groups = {};
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -48,12 +49,10 @@ const processQueue = async (groupId) => {
   console.log("delay started");
   await delay(15000);
 
+  console.log(groups)
+
   while (queue.length > 0) {
     const { msg } = queue.shift();
-
-    if (msg.body) {
-      await delay(10000)
-    }
 
     try {
       await onMessageCreated(msg);
@@ -107,9 +106,28 @@ CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
       return;
     }
 
+    if (!groups[groupId]) {
+      groups[groupId] = [];
+    }
+
     // Создаем очередь для группы, если ее нет
     if (!messageQueues.has(groupId)) {
       messageQueues.set(groupId, []);
+    }
+
+    const isText = msg.body;
+    const currentGroup = groups[groupId].at(-1) || [];
+    const currentMessageGroupHasText = currentGroup.some(
+      (message) => message.body
+    );
+    const currentMessageGroupHasMedia = currentGroup.some(
+      (message) => message.hasMedia
+    );
+
+    if (currentMessageGroupHasText && currentMessageGroupHasMedia && isText) {
+      groups[groupId].push([msg]);
+    } else {
+      groups[groupId] = [...groups[groupId], [...currentGroup, msg]];
     }
 
     console.log(
