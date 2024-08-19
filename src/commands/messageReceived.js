@@ -42,7 +42,7 @@ const sendMessagesQueue = async (group) => {
   console.log("messages.queue.length =>", messages.length);
 
   for (const message of messages) {
-    if (message.type === "chat" && prevMessageType === "chat") {
+    if (message.type === "chat" && prevMessageType === "chat" && !message.hasMedia) {
       await delay(10000);
       await onMessageCreated(message);
     } else {
