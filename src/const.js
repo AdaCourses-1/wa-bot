@@ -44,6 +44,7 @@ const COMMANDS = {
 };
 
 const KEYWORDS_TO_REMOVE = [
+  "Проход 9 контейнер 892/12",
   "Адрес 9",
   "893/8",
   "Дордой",
