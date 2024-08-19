@@ -106,7 +106,7 @@ const messageReceived = async (msg) => {
   // Do not accept messages from not related to bot groups
   if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
 
-  await delay(30000)
+  await delay(5000)
 
   const addedGroup = groupsQueue.find((group) => group.id === groupId);
 
