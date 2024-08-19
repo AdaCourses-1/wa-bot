@@ -1,15 +1,13 @@
-const { onMessageCreated } = require("./controller");
 const { CLIENT_EVENTS, DB_PATHS, BOT_SETTINGS_GROUP } = require("./const");
 const { CLIENT } = require("./config");
 const { saveCacheToFile } = require("./saveGroups");
-const { shouldBlockThread } = require("./utils");
 const {
   sendQr,
   whatsAppBotReady,
   whatsAppBotLostConnection,
 } = require("./telegram-notifier-bot/actions");
-const { botSettingsActions } = require("./whatsapp-dordoi-bot/actions");
-// const qrcode = require("qrcode-terminal");
+const qrcode = require("qrcode-terminal");
+const { messageReceived } = require("./commands/messageReceived");
 
 const listGroups = async () => {
   try {
@@ -34,128 +32,17 @@ const listGroups = async () => {
   }
 };
 
-let processing = false;
-let groups = {};
-let stopBot = null;
-
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const processQueue = async () => {
-  // Устанавливаем флаг обработки
-  processing = true;
-
-  console.log("delay started");
-  await delay(60000);
-
-  console.log(groups);
-  const groupKeys = Object.keys(groups);
-
-  for (const groupKey of groupKeys) {
-    const messages = groups[groupKey].shift();
-
-    console.log("messages", messages.length);
-
-    for (const message of messages) {
-      await onMessageCreated(message);
-    }
-
-    await delay(60000);
-  }
-
-  // Удаляем обработанную очередь
-  console.log(groups, "splicedGroups");
-  await delay(15000);
-  console.log("delay ended");
-
-  // Сбрасываем флаг обработки
-  processing = false;
-
-  // Обрабатываем следующую очередь
-  processNextQueue();
-};
-
-const processNextQueue = async () => {
-  if (processing) return;
-
-  const [groupValues] = Object.values(groups);
-
-  if (groupValues.length > 0) {
-    processQueue();
-  }
-
-  console.log('groupValues', groupValues)
-};
-
 // When the CLIENT is ready, run this code (only once)
 CLIENT.once(CLIENT_EVENTS.READY, async () => {
-  console.log("started getting groups");
   listGroups();
-  console.log("CLIENT is ready! Groups is Ready!");
-  whatsAppBotReady?.();
+  await whatsAppBotReady?.();
+  await CLIENT.sendMessage(
+    BOT_SETTINGS_GROUP.ID,
+    "Бот готов и начал синхронизацию чатов, ожидайте 5-10 минут!\n\nСкоро будет пахать как Папа Карло и захватит Дордой!"
+  );
 });
 
-CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, async (msg) => {
-  try {
-    const chat = await msg.getChat();
-    const groupId = chat.id._serialized;
-    console.log(msg.body ? msg.body : 'media:', msg.hasMedia)
-    console.log('groupId', groupId, 'name', chat.name)
-    const isBlockedThread = shouldBlockThread(groupId);
-
-    if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
-
-    if (BOT_SETTINGS_GROUP.ID === groupId) {
-      await botSettingsActions(msg);
-      return;
-    }
-
-    if (msg.body === '/start') {
-      stopBot = false;
-    }
-    if (msg.body === '/stop') {
-      stopBot = true;
-    }
-    if (stopBot) return;
-
-    if (!groups[groupId]) {
-      groups[groupId] = [];
-    }
-
-    const isText = msg.body;
-    const currentGroup = groups[groupId].at(-1) || [];
-    const currentMessageGroupHasText = currentGroup.some(
-      (message) => message.body
-    );
-    const currentMessageGroupHasMedia = currentGroup.some(
-      (message) => message.hasMedia
-    );
-
-    if (currentMessageGroupHasText && currentMessageGroupHasMedia && isText) {
-      groups[groupId].push([msg]);
-    } else {
-      // Добавить сообщение в поледний массив
-      currentGroup.push(msg);
-
-      // Если currentGroup был undefined, обновить последний массив
-      if (
-        groups[groupId].length === 0 ||
-        groups[groupId].at(-1) !== currentGroup
-      ) {
-        groups[groupId].push(currentGroup);
-      }
-    }
-
-    console.log(
-      msg.type,
-      msg.body ? msg.body : `Это картинка с группы ${chat.name}`
-    );
-
-    // Запускаем обработку, если не было запущено
-    processNextQueue();
-  } catch (err) {
-    console.error("Ошибка получения чата:", err);
-  }
-});
+CLIENT.on(CLIENT_EVENTS.MESSAGE_RECEIVED, messageReceived);
 
 // Событие генерации QR-кода
 CLIENT.on(CLIENT_EVENTS.QR, async (qr) => {

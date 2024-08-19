@@ -30,7 +30,7 @@ const botSettingsActions = async (msg) => {
     return;
   }
 
-  if (command === COMMANDS.GET_ALL_COMMANDS) {
+  if (command.includes(COMMANDS.GET_ALL_COMMANDS)) {
     const allCommands = Object.values(COMMANDS);
 
     try {
@@ -76,7 +76,7 @@ const botSettingsActions = async (msg) => {
     }
   }
 
-  if (command === COMMANDS.GET_KEYWORDS) {
+  if (command.includes(COMMANDS.GET_KEYWORDS)) {
     try {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
@@ -90,7 +90,7 @@ const botSettingsActions = async (msg) => {
     return;
   }
 
-  if (command === COMMANDS.GET_ADDED_GROUPS) {
+  if (command.includes(COMMANDS.GET_ADDED_GROUPS)) {
     const chats = await CLIENT.getChats();
     const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
 
@@ -187,11 +187,13 @@ const botSettingsActions = async (msg) => {
     return;
   }
 
-  if (command === COMMANDS.GET_EXACT_PATHS) {
+  if (command.includes(COMMANDS.GET_EXACT_PATHS)) {
     const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
 
     const chats = await CLIENT.getChats();
     const sourceChats = Object.keys(bot.exact_paths || {});
+
+    console.log(bot)
 
     try {
       if (!sourceChats.length) {
@@ -231,7 +233,7 @@ const botSettingsActions = async (msg) => {
     return;
   }
 
-  if (command === COMMANDS.CLEAR_EXACT_PATHS) {
+  if (command.includes(COMMANDS.CLEAR_EXACT_PATHS)) {
     const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
 
     try {
