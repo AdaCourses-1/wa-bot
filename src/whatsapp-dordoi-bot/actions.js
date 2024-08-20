@@ -253,7 +253,7 @@ const botSettingsActions = async (msg) => {
     }
   }
 
-  if (command.includes(ADD_ALL_GROUPS)) {
+  if (command.includes(COMMANDS.ADD_ALL_GROUPS)) {
     const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
 
     const chats = await CLIENT.getChats();
