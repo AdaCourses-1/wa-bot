@@ -105,10 +105,11 @@ const messageReceived = async (msg) => {
 
   // Do not accept messages from not related to bot groups
   if (!exactPaths || !exactPaths[groupId]) return;
+  console.log(msg.body, msg.hasMedia)
 
-  const isBlockedThread = shouldBlockThread(groupId);
-  // Do not accept messages from not related to bot groups
-  if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
+  // const isBlockedThread = shouldBlockThread(groupId);
+  // // Do not accept messages from not related to bot groups
+  // if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
 
   const addedGroup = groupsQueue.find((group) => group.id === groupId);
 
