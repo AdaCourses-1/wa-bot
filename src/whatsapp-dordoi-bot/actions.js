@@ -193,8 +193,6 @@ const botSettingsActions = async (msg) => {
     const chats = await CLIENT.getChats();
     const sourceChats = Object.keys(bot.exact_paths || {});
 
-    console.log(bot)
-
     try {
       if (!sourceChats.length) {
         return await CLIENT.sendMessage(
@@ -251,6 +249,45 @@ const botSettingsActions = async (msg) => {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
         `Не получилось куда и откуда скидываются товары удалить по причине:\n\n${err.message}`
+      );
+    }
+  }
+
+  if (command.includes(ADD_ALL_GROUPS)) {
+    const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+
+    const chats = await CLIENT.getChats();
+
+    let data = {
+      exact_paths: {
+        ...bot.exact_paths,
+      },
+    };
+
+    try {
+      chats.forEach((chat) => {
+        if (chat.isGroup) {
+          data = {
+            ...bot,
+            exact_paths: {
+              ...bot.exact_paths,
+              [chat.id._serialized]: [
+                "120363322029251331@g.us",
+                "120363303809348412@g.us",
+              ],
+            },
+          };
+        }
+      });
+      saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
+      await CLIENT.sendMessage(
+        BOT_SETTINGS_GROUP.ID,
+        `Добавил все группы, это было жестко!`
+      );
+    } catch (err) {
+      await CLIENT.sendMessage(
+        BOT_SETTINGS_GROUP.ID,
+        `Не удалось добавить все группы по причине:\n\n${err.message}`
       );
     }
   }
