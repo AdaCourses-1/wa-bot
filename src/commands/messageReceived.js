@@ -57,7 +57,6 @@ const sendMessagesQueue = async (group) => {
       "В этой группе еще есть сообщения в очереди, начинаю их обрабатывать, остаток =>",
       group.messages.length
     );
-    await delay(60000);
     sendMessagesQueue(group);
     return;
   }
