@@ -267,16 +267,10 @@ const botSettingsActions = async (msg) => {
     try {
       chats.forEach((chat) => {
         if (chat.isGroup) {
-          data = {
-            ...bot,
-            exact_paths: {
-              ...bot.exact_paths,
-              [chat.id._serialized]: [
-                "120363322029251331@g.us",
-                "120363303809348412@g.us",
-              ],
-            },
-          };
+          data.exact_paths[chat.id._serialized] = [
+            "120363322029251331@g.us",
+            "120363303809348412@g.us",
+          ];
         }
       });
       saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
