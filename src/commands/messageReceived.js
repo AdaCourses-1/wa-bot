@@ -7,6 +7,7 @@ const { CLIENT } = require("../config");
 
 let groupsQueue = [];
 let stopBot = false;
+let groupsQueueFlag = false;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -21,7 +22,7 @@ const addMessageToGroup = (group, msg) => {
     (message) => message.hasMedia
   );
 
-  if (currentMessageGroupHasText && currentMessageGroupHasMedia && isText) {
+  if (currentMessageGroupHasText && isText) {
     group.messages.push([msg]);
   } else {
     // Добавить сообщение в поледний массив
@@ -42,7 +43,11 @@ const sendMessagesQueue = async (group) => {
   console.log("messages.queue.length =>", messages.length);
 
   for (const message of messages) {
-    if (message.type === "chat" && prevMessageType === "chat" && !message.hasMedia) {
+    if (
+      message.type === "chat" &&
+      prevMessageType === "chat" &&
+      !message.hasMedia
+    ) {
       await delay(10000);
       await onMessageCreated(message);
     } else {
@@ -105,8 +110,6 @@ const messageReceived = async (msg) => {
   // Do not accept messages from not related to bot groups
   if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
 
-  await delay(5000)
-
   const addedGroup = groupsQueue.find((group) => group.id === groupId);
 
   if (addedGroup && !addedGroup.messages.length) {
@@ -131,14 +134,19 @@ const messageReceived = async (msg) => {
 const debouncedMessages = debounce(sendMessagesFromGroups, 60000);
 
 async function sendMessagesFromGroups() {
+  if (groupsQueueFlag) return;
   try {
     console.log("Начал обработку групп сообщений");
 
+    groupsQueueFlag = true;
+  
     while (groupsQueue.length > 0) {
       const group = groupsQueue.shift();
       await delay(60000);
       await sendMessagesQueue(group);
     }
+
+    groupsQueueFlag = false;
 
     console.log("groupsQueue", groupsQueue.length);
   } catch (err) {
