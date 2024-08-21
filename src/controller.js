@@ -116,14 +116,18 @@ function reorderQueue(messageQueue) {
   if (firstWithBody) {
     return [...withoutBody, ...withBody, firstWithBody];
   } else {
-    // Если элементов с msg.body нет, создаём новый элемент и добавляем его в конец
-    const emptyMessage = {
-      msg: {
-        body: "Новое поступление!",
-      },
-      chat: withoutBody[0]?.chat,
-    };
-    return [...withoutBody, emptyMessage];
+    if (withoutBody && withoutBody.length > 0) {
+      // Если элементов с msg.body нет, создаём новый элемент и добавляем его в конец
+      const emptyMessage = {
+        msg: {
+          body: "Новое поступление!",
+        },
+        chat: withoutBody[0]?.chat,
+      };
+      return [...withoutBody, emptyMessage];
+    }
+
+    return withoutBody;
   }
 }
 
