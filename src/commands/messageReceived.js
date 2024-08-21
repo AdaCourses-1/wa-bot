@@ -51,7 +51,7 @@ const processGroupMessages = async (group) => {
   const prevMessage = null;
 
   for (const message of messages) {
-    if (message.body && prevMessage.body) {
+    if (prevMessage && message.body && prevMessage?.body) {
       await delay(6000);
     }
     await onMessageCreated(message);
