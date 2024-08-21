@@ -56,8 +56,6 @@ const processGroupMessages = async (group) => {
 };
 
 const messageReceived = async (msg) => {
-  const chatId = await msg.getChat().id._serialized;
-
   if (msg.body === "/start") {
     await CLIENT.sendMessage(
       BOT_SETTINGS_GROUP.ID,
@@ -85,6 +83,10 @@ const messageReceived = async (msg) => {
     stopBot = true;
     return;
   }
+
+  const chatId = (await msg.getChat()).id?._serialized;
+
+  console.log(chatId, 'chatId')
 
   if (BOT_SETTINGS_GROUP.ID === chatId) {
     await botSettingsActions(msg);
