@@ -12,37 +12,41 @@ let groupsQueueFlag = false;
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const addMessageToGroup = (group, message) => {
-  const containsText = !!message.body;
+  const isText = !!message.body;
 
-  let latestGroup = group.messages[group.messages.length - 1];
+  // Получаем последнюю группу сообщений или создаем новую
+  let lastGroup = group.messages[group.messages.length - 1];
 
-  if (!latestGroup) {
-    latestGroup = [];
-    group.messages.push(latestGroup);
+  if (!lastGroup) {
+    lastGroup = [];
+    group.messages.push(lastGroup);
   }
 
-  const latestGroupContainsText = latestGroup.some((msg) => !!msg.body);
-  const latestGroupContainsMedia = latestGroup.some((msg) => msg.hasMedia);
+  // Проверяем, содержит ли последняя группа текстовые и медиа сообщения
+  const containsText = lastGroup.some((msg) => !!msg.body);
+  const containsMedia = lastGroup.some((msg) => msg.hasMedia);
 
-  if (latestGroupContainsText && latestGroupContainsMedia) {
-    if (containsText) {
-      group.messages.push([message]);
-    } else {
-      latestGroup.push(message);
-    }
-  } else {
-    latestGroup.push(message);
-    const updatedContainsText = latestGroup.some((msg) => !!msg.body);
-    const updatedContainsMedia = latestGroup.some((msg) => msg.hasMedia);
+  // Если последняя группа содержит и текстовые, и медиа сообщения
+  // и новое сообщение текстовое, создаем новую группу
+  if (containsText && containsMedia && isText) {
+    group.messages.push([message]);
+    return;
+  }
 
-    if (
-      (updatedContainsText && !updatedContainsMedia) ||
-      (updatedContainsMedia && !updatedContainsText)
-    ) {
-      group.messages.push([]);
-    }
+  // Добавляем сообщение в последнюю группу
+  lastGroup.push(message);
+
+  // Проверяем, содержит ли последняя группа теперь текстовые и медиа сообщения
+  const updatedContainsText = lastGroup.some((msg) => !!msg.body);
+  const updatedContainsMedia = lastGroup.some((msg) => msg.hasMedia);
+
+  // Создаем новую группу только если предыдущая группа содержит и текстовые, и медиа сообщения
+  if (containsText && containsMedia && (updatedContainsText && !updatedContainsMedia || !updatedContainsText && updatedContainsMedia)) {
+    group.messages.push([]);
   }
 };
+
+
 
 const processGroupMessages = async (group) => {
   if (!group || !group.messages.length) return;
