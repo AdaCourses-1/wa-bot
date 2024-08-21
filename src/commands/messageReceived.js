@@ -41,12 +41,15 @@ const addMessageToGroup = (group, message) => {
   const updatedContainsMedia = lastGroup.some((msg) => msg.hasMedia);
 
   // Создаем новую группу только если предыдущая группа содержит и текстовые, и медиа сообщения
-  if (containsText && containsMedia && (updatedContainsText && !updatedContainsMedia || !updatedContainsText && updatedContainsMedia)) {
+  if (
+    containsText &&
+    containsMedia &&
+    ((updatedContainsText && !updatedContainsMedia) ||
+      (!updatedContainsText && updatedContainsMedia))
+  ) {
     group.messages.push([]);
   }
 };
-
-
 
 const processGroupMessages = async (group) => {
   if (!group || !group.messages.length) return;
@@ -97,9 +100,22 @@ const messageReceived = async (msg) => {
     return;
   }
 
-  const chatId = (await msg.getChat()).id?._serialized;
+  // Преобразование UNIX timestamp в миллисекунды и создание объекта Date
+  const date = new Date(msg.timestamp * 1000);
 
-  console.log(chatId, "chatId");
+  // Альтернативный способ - форматирование вручную
+  const formattedDate = `${date.getFullYear()}-${String(
+    date.getMonth() + 1
+  ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(
+    date.getHours()
+  ).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:${String(
+    date.getSeconds()
+  ).padStart(2, "0")}`;
+  console.log(formattedDate);
+
+  console.log(formattedDate, "timestamp");
+
+  const chatId = (await msg.getChat()).id?._serialized;
 
   if (BOT_SETTINGS_GROUP.ID === chatId) {
     await botSettingsActions(msg);
