@@ -11,64 +11,53 @@ let groupsQueueFlag = false;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Adds a message to a specific group in the messages queue.
+ * If the current message group has both text and media messages,
+ * a new message group is created to hold the new message.
+ * Otherwise, the new message is added to the last message group.
+ *
+ * @param {Object} group - The group to add the message to.
+ * @param {Object} msg - The message to add.
+ */
 const addMessageToGroup = (group, msg) => {
-  const isText = msg.body;
-  const currentMessagesQueue = group.messages.at(-1);
+  // Check if the message is a text message
+  const isText = !!msg.body;
 
-  const currentMessageGroupHasText = currentMessagesQueue.some(
-    (message) => message.body
-  );
-  const currentMessageGroupHasMedia = currentMessagesQueue.some(
-    (message) => message.hasMedia
-  );
+  // Get the last message group in the group's messages queue
+  const lastGroup = group.messages[group.messages.length - 1];
 
-  if (currentMessageGroupHasText && currentMessageGroupHasMedia && isText) {
+  // Check if the current message group has both text and media messages
+  const hasText = lastGroup.some((message) => !!message.body);
+  const hasMedia = lastGroup.some((message) => message.hasMedia);
+
+  // If the current message group has both text and media messages and the new message is a text message,
+  // create a new message group to hold the new message
+  if (hasText && hasMedia && isText) {
     group.messages.push([msg]);
   } else {
-    // Добавить сообщение в поледний массив
-    currentMessagesQueue.push(msg);
+    // Add the new message to the last message group
+    lastGroup.push(msg);
   }
 };
 
-const sendMessagesQueue = async (group) => {
-  if (!group) return;
+const processGroupMessages = async (group) => {
+  if (!group || !group.messages.length) return;
 
-  const messages = group?.messages?.shift();
-  let prevMessageType = null;
-
-  if (!messages || !messages.length) {
-    console.log("В группе нет сообщений для обработки =>", group);
-    return;
-  }
-  console.log("messages.queue.length =>", messages.length);
+  const messages = group.messages.shift();
 
   for (const message of messages) {
-    if (
-      message.type === "chat" &&
-      prevMessageType === "chat" &&
-      !message.hasMedia
-    ) {
-      await delay(10000);
-      await onMessageCreated(message);
-    } else {
-      await onMessageCreated(message);
-    }
-
-    prevMessageType = message.type;
+    await onMessageCreated(message);
   }
 
   if (group.messages.length > 0) {
-    console.log(
-      "В этой группе еще есть сообщения в очереди, начинаю их обрабатывать, остаток =>",
-      group.messages.length
-    );
-    sendMessagesQueue(group);
-    return;
+    await processGroupMessages(group);
   }
-  console.log("Полностью обработал всю группу! =>", group);
 };
 
 const messageReceived = async (msg) => {
+  const chatId = await msg.getChat().id._serialized;
+
   if (msg.body === "/start") {
     await CLIENT.sendMessage(
       BOT_SETTINGS_GROUP.ID,
@@ -77,7 +66,9 @@ const messageReceived = async (msg) => {
         : "Бот уже запущен, не надо нагнетать!"
     );
     stopBot = false;
+    return;
   }
+
   if (stopBot) {
     await CLIENT.sendMessage(
       BOT_SETTINGS_GROUP.ID,
@@ -85,6 +76,7 @@ const messageReceived = async (msg) => {
     );
     return;
   }
+
   if (msg.body === "/stop") {
     await CLIENT.sendMessage(
       BOT_SETTINGS_GROUP.ID,
@@ -94,40 +86,20 @@ const messageReceived = async (msg) => {
     return;
   }
 
-  const chat = await msg.getChat();
-  const groupId = chat.id._serialized;
-
-  // send to settings group
-  if (BOT_SETTINGS_GROUP.ID === groupId) {
+  if (BOT_SETTINGS_GROUP.ID === chatId) {
     await botSettingsActions(msg);
     return;
   }
 
-  // Do not accept messages from not related to bot groups
-  if (!exactPaths || !exactPaths[groupId]) return;
-  console.log(msg.body, msg.hasMedia)
+  if (!exactPaths || !exactPaths[chatId]) return;
 
-  // const isBlockedThread = shouldBlockThread(groupId);
-  // // Do not accept messages from not related to bot groups
-  // if (isBlockedThread || (!msg.body && !msg.hasMedia)) return;
+  const existingGroup = groupsQueue.find((group) => group.id === chatId);
 
-  const addedGroup = groupsQueue.find((group) => group.id === groupId);
-
-  if (addedGroup && !addedGroup.messages.length) {
-    addedGroup.messages = [[]];
-    console.log("Группа уже была, но без messageQueue, создал новый queue");
-  }
-
-  if (addedGroup) {
-    addMessageToGroup(addedGroup, msg);
-  }
-
-  if (!addedGroup) {
-    const newGroup = { id: groupId, messages: [[msg]] };
-
+  if (existingGroup) {
+    addMessageToGroup(existingGroup, msg);
+  } else {
+    const newGroup = { id: chatId, messages: [[msg]] };
     groupsQueue.push(newGroup);
-
-    console.log("Была создана и добавлена новая группа =>", groupsQueue);
   }
 
   debouncedMessages();
@@ -140,14 +112,18 @@ async function sendMessagesFromGroups() {
     console.log("Начал обработку групп сообщений");
 
     groupsQueueFlag = true;
-  
+
     while (groupsQueue.length > 0) {
       const group = groupsQueue.shift();
       await delay(60000);
-      await sendMessagesQueue(group);
+      await processGroupMessages(group);
     }
 
     groupsQueueFlag = false;
+
+    if (groupsQueue.length > 0) {
+      sendMessagesFromGroups();
+    }
 
     console.log("groupsQueue", groupsQueue.length);
   } catch (err) {
