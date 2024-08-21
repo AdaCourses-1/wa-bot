@@ -48,7 +48,7 @@ const processGroupMessages = async (group) => {
   if (!group || !group.messages.length) return;
 
   const messages = group.messages.shift();
-  const prevMessage = null;
+  let prevMessage = null;
 
   for (const message of messages) {
     if (prevMessage && message.body && prevMessage?.body) {
