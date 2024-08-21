@@ -113,7 +113,7 @@ const messageReceived = async (msg) => {
   ).padStart(2, "0")}`;
   console.log(formattedDate);
 
-  console.log(formattedDate, "timestamp");
+  console.log(formattedDate, "timestamp", 'msg.type =>', msg.type);
 
   const chatId = (await msg.getChat()).id?._serialized;
 
