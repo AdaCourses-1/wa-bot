@@ -134,8 +134,8 @@ const botSettingsActions = async (msg) => {
       const lines = command.trim().split("\n");
 
       // Извлекаем chat_id1 и chat_id2
-      const chatId1 = lines[2].split(": ")[1]; // 2 строка
-      const chatId2 = lines[3].split(": ")[1]; // 3 строка
+      const chatId1 = lines[2].split(": ")[1]?.trim(); // 2 строка
+      const chatId2 = lines[3].split(": ")[1]?.trim(); // 3 строка
 
       const newExactPath = {
         source_chat: chatId1,
@@ -253,35 +253,68 @@ const botSettingsActions = async (msg) => {
     }
   }
 
-  if (command.includes(COMMANDS.ADD_ALL_GROUPS)) {
+  // depreceated
+  // if (command.includes(COMMANDS.ADD_ALL_GROUPS)) {
+  //   const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+
+  //   const chats = await CLIENT.getChats();
+
+  //   let data = {
+  //     exact_paths: {
+  //       ...bot.exact_paths,
+  //     },
+  //   };
+
+  //   try {
+  //     chats.forEach((chat) => {
+  //       if (chat.isGroup) {
+  //         data.exact_paths[chat.id._serialized] = [
+  //           "120363322029251331@g.us",
+  //           "120363303809348412@g.us",
+  //         ];
+  //       }
+  //     });
+  //     saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
+  //     await CLIENT.sendMessage(
+  //       BOT_SETTINGS_GROUP.ID,
+  //       `Добавил все группы, это было жестко!`
+  //     );
+  //   } catch (err) {
+  //     await CLIENT.sendMessage(
+  //       BOT_SETTINGS_GROUP.ID,
+  //       `Не удалось добавить все группы по причине:\n\n${err.message}`
+  //     );
+  //   }
+  // }
+
+  if (command.includes(COMMANDS.DELETE_EXACT_PATHS)) {
     const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
 
-    const chats = await CLIENT.getChats();
-
-    let data = {
-      exact_paths: {
-        ...bot.exact_paths,
-      },
-    };
+    const lines = command.trim().split("\n");
 
     try {
-      chats.forEach((chat) => {
-        if (chat.isGroup) {
-          data.exact_paths[chat.id._serialized] = [
-            "120363322029251331@g.us",
-            "120363303809348412@g.us",
-          ];
-        }
-      });
+      // Извлекаем chat_id1 и chat_id2
+      const chatId1 = lines[2].split(": ")[1]?.trim(); // 2 строка
+      const chatId2 = lines[3].split(": ")[1]?.trim(); // 3 строка
+
+      const data = {
+        ...bot,
+        exact_paths: {
+          ...bot.exact_paths,
+          [chatId1]: bot.exact_paths[chatId1].filter((id) => id !== chatId2),
+        },
+      };
+
       saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
+
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
-        `Добавил все группы, это было жестко!`
+        `Успешно удалил группы!\n\nТеперь товары НЕ будут браться конкретно из группы ${chatId1} и добавляться конкретно в группу ${chatId2}`
       );
     } catch (err) {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
-        `Не удалось добавить все группы по причине:\n\n${err.message}`
+        `Не получилось реализовать команду ${COMMANDS.DELETE_EXACT_PATHS} по причине:\n\n${err.message}`
       );
     }
   }

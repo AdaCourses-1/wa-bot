@@ -132,7 +132,7 @@ const messageReceived = async (msg) => {
 
   debouncedMessages();
 };
-const debouncedMessages = debounce(sendMessagesFromGroups, 60000);
+const debouncedMessages = debounce(sendMessagesFromGroups, 90000);
 
 async function sendMessagesFromGroups() {
   if (groupsQueueFlag) return;

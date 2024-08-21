@@ -39,7 +39,7 @@ const COMMANDS = {
   ADD_KEYWORDS: "Добавить ключевые слова",
   ADD_EXACT_PATHS: "Добавить откуда и куда",
   GET_EXACT_PATHS: "Получить откуда и куда",
-  DELETE_EXACT_PATHS: "Удалить 1 группы откуд и куда",
+  DELETE_EXACT_PATHS: "Удалить группы откуда и куда",
   CLEAR_EXACT_PATHS: "Удалить все группы откуда и куда",
   ADD_ALL_GROUPS: "Добавить все группы!"
 };
