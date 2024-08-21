@@ -22,7 +22,7 @@ const addMessageToGroup = (group, msg) => {
     (message) => message.hasMedia
   );
 
-  if (currentMessageGroupHasText && isText) {
+  if (currentMessageGroupHasText && currentMessageGroupHasMedia && isText) {
     group.messages.push([msg]);
   } else {
     // Добавить сообщение в поледний массив
