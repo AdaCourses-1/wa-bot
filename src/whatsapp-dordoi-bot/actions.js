@@ -324,14 +324,18 @@ const botSettingsActions = async (msg) => {
     const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
     const botSourceChatsCounter = Object.keys(bot.exact_paths)?.length;
     const botDestChatsCounter = Object.keys(bot.exact_paths).reduce(
-      (sum, key) => {
+      (chats, key) => {
         if (bot.exact_paths[key]) {
-          sum += bot.exact_paths[key].length;
+          bot.exact_paths[key].forEach((id) => {
+            if (!chats.includes(id)) {
+              chats = [...chats, id];
+            }
+          });
         }
-        return sum;
+        return chats;
       },
-      0
-    );
+      []
+    ).length;
 
     try {
       await CLIENT.sendMessage(
