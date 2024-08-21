@@ -55,15 +55,9 @@ const processGroupMessages = async (group) => {
   if (!group || !group.messages.length) return;
 
   const messages = group.messages.shift();
-  let prevMessage = null;
 
   for (const message of messages) {
-    if (prevMessage && message.body && prevMessage?.body) {
-      await delay(6000);
-    }
     await onMessageCreated(message);
-
-    prevMessage = message;
   }
 
   if (group.messages.length > 0) {
