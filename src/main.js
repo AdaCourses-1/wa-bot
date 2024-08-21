@@ -34,11 +34,15 @@ const listGroups = async () => {
 
 // When the CLIENT is ready, run this code (only once)
 CLIENT.once(CLIENT_EVENTS.READY, async () => {
+  await CLIENT.sendMessage(
+    BOT_SETTINGS_GROUP.ID,
+    "Соединение восстановлено! Прошу ожидать синхронизацию чатов..."
+  );
   listGroups();
   await whatsAppBotReady?.();
   await CLIENT.sendMessage(
     BOT_SETTINGS_GROUP.ID,
-    "Бот готов и начал синхронизацию чатов, ожидайте 5-10 минут!\n\nСкоро будет пахать как Папа Карло и захватит Дордой!"
+    "Синхронизация почти завершена!\nБот в состоянии рассылать сообщения!\n\nГотовлюсь работать как Папа Карло!"
   );
 });
 

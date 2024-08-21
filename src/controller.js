@@ -1,5 +1,5 @@
 const { CLIENT } = require("./config");
-const { BOT_HISTORY_GROUP } = require("./const");
+const { BOT_HISTORY_GROUP, BOT_SETTINGS_GROUP } = require("./const");
 const {
   exactPaths,
   generateUniqueId,
@@ -41,6 +41,12 @@ const processQueue = async () => {
 
   if (!msg || !chat) {
     isProcessing = false;
+    await CLIENT.sendMessage(
+      BOT_SETTINGS_GROUP.ID,
+      `Данное сообщение не было доставлено клиентам по так как не было информации про CHAT и про MESSAGE\n\nКонтекст: message - ${msg}\nchat: ${
+        chat ? chat.name : chat
+      }`
+    );
     return;
   }
 
@@ -51,7 +57,10 @@ const processQueue = async () => {
       if (isVideoOrImage(media?.mimetype)) {
         if (fileSizeInMb(media?.fileSize) > 100) {
           // Проверка на размер более 100 МБ
-          console.error("Файл превышает максимальный размер 100 МБ");
+          await CLIENT.sendMessage(
+            BOT_SETTINGS_GROUP.ID,
+            `Медиа-файл не был доставлен клиетам так как размер файла превышал допустимые нормы в 100МБ`
+          );
           return;
         }
 
@@ -67,7 +76,10 @@ const processQueue = async () => {
 
     await sendToDestChats(message, chat, msg);
   } catch (err) {
-    console.log("Случилась ошибка:", err);
+    await CLIENT.sendMessage(
+      BOT_SETTINGS_GROUP.ID,
+      `Случилась непредвиденная ошибка с системой WhatsApp, контекст ошибки: \n\n${err.message}`
+    );
   } finally {
     isProcessing = false;
     processQueue(); // Продолжаем обработку очереди
@@ -93,23 +105,26 @@ const onMessageCreated = async (msg) => {
 };
 
 function reorderQueue(messageQueue) {
-  // Отделяем объекты с полем msg.body от тех, у кого его нет
-  const withBody = messageQueue.find((item) => item.msg?.body);
+  // Разделяем элементы с msg.body и без него
+  const withBody = messageQueue.filter((item) => item.msg?.body);
   const withoutBody = messageQueue.filter((item) => !item.msg?.body);
 
-  let emptyMessage = withBody;
+  // Извлекаем первый элемент с msg.body
+  const firstWithBody = withBody.shift();
 
-  if (!withBody || !withBody.length) {
-    emptyMessage = {
+  // Если есть хотя бы один элемент с msg.body, перемещаем его в конец
+  if (firstWithBody) {
+    return [...withoutBody, ...withBody, firstWithBody];
+  } else {
+    // Если элементов с msg.body нет, создаём новый элемент и добавляем его в конец
+    const emptyMessage = {
       msg: {
         body: "Новое поступление!",
       },
       chat: withoutBody[0]?.chat,
     };
+    return [...withoutBody, emptyMessage];
   }
-
-  // Объединяем массивы: сначала объекты без msg.body, затем объекты с msg.body
-  return [...withoutBody, withBody ? { ...withBody } : emptyMessage];
 }
 
 module.exports = { onMessageCreated };

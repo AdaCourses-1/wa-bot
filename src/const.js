@@ -29,6 +29,7 @@ const BOT_HISTORY_GROUP = {
 };
 
 const COMMANDS = {
+  GET_INFO: "Получить информацию про бота",
   GET_CHATS: "Получить чаты",
   GET_ALL_COMMANDS: "Получить команды",
   GET_ADDED_GROUPS: "Получить добавленные группы",

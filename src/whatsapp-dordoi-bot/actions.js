@@ -4,6 +4,7 @@ const {
   COMMANDS,
   DB_PATHS,
   KEYWORDS_TO_REMOVE,
+  BOT_HISTORY_GROUP,
 } = require("../const");
 const { loadCacheFromFile, saveCacheToFile } = require("../saveGroups");
 
@@ -315,6 +316,33 @@ const botSettingsActions = async (msg) => {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
         `Не получилось реализовать команду ${COMMANDS.DELETE_EXACT_PATHS} по причине:\n\n${err.message}`
+      );
+    }
+  }
+
+  if (command.includes(COMMANDS.GET_INFO)) {
+    const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+    const botSourceChatsCounter = Object.keys(bot.exact_paths)?.length;
+    const botDestChatsCounter = Object.keys(bot.exact_paths).reduce(
+      (sum, key) => {
+        if (bot.exact_paths[key]) {
+          sum += bot.exact_paths[key].length;
+        }
+        return sum;
+      },
+      0
+    );
+
+    try {
+      await CLIENT.sendMessage(
+        BOT_SETTINGS_GROUP.ID,
+        `Имя: Dordoi Killer\nДата Создания: 05.08.2024\nКонфигурация Сервера: 3 CPU, 4GB RAM, 15GB SSD\nКоличество чатов куда рассылаются сообщения: ${botSourceChatsCounter}\nКоличество чатов откуда берутся сообщения: ${botDestChatsCounter}\n
+        `
+      );
+    } catch (err) {
+      await CLIENT.sendMessage(
+        BOT_HISTORY_GROUP.ID,
+        `Не смог получить информацию из сервера по причине:${err.message}`
       );
     }
   }
