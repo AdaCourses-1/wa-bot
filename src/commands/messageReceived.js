@@ -61,6 +61,7 @@ const processGroupMessages = async (group) => {
   }
 
   if (group.messages.length > 0) {
+    await delay(10000)
     await processGroupMessages(group);
   }
 };
