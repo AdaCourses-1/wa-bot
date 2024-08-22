@@ -108,6 +108,8 @@ const onMessageCreated = async (msg) => {
         return 0;
       });
 
+      console.log(messageQueue)
+
       processQueue();
     }
   }, 5000);

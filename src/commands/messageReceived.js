@@ -61,6 +61,7 @@ const processGroupMessages = async (group) => {
   }
 
   if (group.messages.length > 0) {
+    console.log('Осталось еще сообщения в группе', group.messages.length)
     await delay(20000)
     await processGroupMessages(group);
   }
@@ -147,6 +148,7 @@ async function sendMessagesFromGroups() {
     groupsQueueFlag = false;
 
     if (groupsQueue.length > 0) {
+      console.log('Осталось еще группы сообщений, увы, перезапускаюсь', groupsQueue.length)
       sendMessagesFromGroups();
     }
 
