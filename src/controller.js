@@ -98,12 +98,12 @@ const onMessageCreated = async (msg) => {
   timerId = setTimeout(() => {
     if (!isProcessing) {
       messageQueue = reorderQueue(messageQueue)?.sort((a, b) => {
-        // Если `a` не имеет `msg.body` и `b` имеет `msg.body`, `a` должен идти раньше
-        if (!a.msg?.body && b.msg?.body) return -1;
-
-        // Если `a` имеет `msg.body`, а `b` не имеет, `b` должен идти раньше
+        // Если `a` имеет `msg.body` и `b` не имеет, `a` должен идти позже
         if (a.msg?.body && !b.msg?.body) return 1;
-
+      
+        // Если `a` не имеет `msg.body`, а `b` имеет, `b` должен идти позже
+        if (!a.msg?.body && b.msg?.body) return -1;
+      
         // В противном случае порядок не меняется
         return 0;
       });
