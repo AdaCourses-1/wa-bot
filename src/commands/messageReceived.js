@@ -61,7 +61,7 @@ const processGroupMessages = async (group) => {
   }
 
   if (group.messages.length > 0) {
-    await delay(10000)
+    await delay(20000)
     await processGroupMessages(group);
   }
 };
@@ -106,7 +106,6 @@ const messageReceived = async (msg) => {
   ).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:${String(
     date.getSeconds()
   ).padStart(2, "0")}`;
-  console.log(formattedDate);
 
   console.log(formattedDate, "timestamp", 'msg.type =>', msg.type);
 
@@ -130,7 +129,7 @@ const messageReceived = async (msg) => {
 
   debouncedMessages();
 };
-const debouncedMessages = debounce(sendMessagesFromGroups, 25000);
+const debouncedMessages = debounce(sendMessagesFromGroups, 30000);
 
 async function sendMessagesFromGroups() {
   if (groupsQueueFlag) return;
