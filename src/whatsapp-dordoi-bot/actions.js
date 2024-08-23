@@ -336,7 +336,7 @@ const botSettingsActions = async (msg) => {
       },
       []
     ).length;
-    const messagesCounter = bot.messages_counter || 0;
+    const messagesCounter = bot.messages_counter || 1;
 
     try {
       await CLIENT.sendMessage(

@@ -17,7 +17,7 @@ const messagesCounter = () => {
   if (bot.messages_counter) {
     return ++bot.messages_counter;
   }
-  return 0;
+  return 1;
 };
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -161,7 +161,7 @@ const messageReceived = async (msg) => {
 
   debouncedMessages();
 };
-const debouncedMessages = debounce(sendMessagesFromGroups, 600000);
+const debouncedMessages = debounce(sendMessagesFromGroups, 1800000);
 
 async function sendMessagesFromGroups() {
   if (groupsQueueFlag) return;
