@@ -1,13 +1,23 @@
 const { onMessageCreated } = require("../controller");
-const { BOT_SETTINGS_GROUP } = require("../const");
+const { BOT_SETTINGS_GROUP, DB_PATHS } = require("../const");
 const { shouldBlockThread, exactPaths } = require("../utils");
 const { debounce } = require("lodash");
 const { botSettingsActions } = require("../whatsapp-dordoi-bot/actions");
 const { CLIENT } = require("../config");
+const { loadCacheFromFile, saveCacheToFile } = require("../saveGroups");
 
 let groupsQueue = [];
 let stopBot = false;
 let groupsQueueFlag = false;
+
+const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+
+const messagesCounter = () => {
+  if (bot.messages_counter) {
+    return ++bot.messages_counter;
+  }
+  return 0;
+};
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -54,16 +64,14 @@ const addMessageToGroup = (group, message) => {
 const processGroupMessages = async (group) => {
   if (!group || !group.messages.length) return;
 
-  const messages = group.messages.shift();
+  while (group.messages.length > 0) {
+    const messages = group.messages.shift();
 
-  for (const message of messages) {
-    await onMessageCreated(message);
-  }
+    for (const message of messages) {
+      await onMessageCreated(message);
+    }
 
-  if (group.messages.length > 0) {
-    console.log('Осталось еще сообщения в группе', group.messages.length)
-    await delay(20000)
-    await processGroupMessages(group);
+    await delay(120000);
   }
 };
 
@@ -108,8 +116,6 @@ const messageReceived = async (msg) => {
     date.getSeconds()
   ).padStart(2, "0")}`;
 
-  console.log(formattedDate, "timestamp", 'msg.type =>', msg.type);
-
   const chatId = (await msg.getChat()).id?._serialized;
 
   if (BOT_SETTINGS_GROUP.ID === chatId) {
@@ -118,6 +124,26 @@ const messageReceived = async (msg) => {
   }
 
   if (!exactPaths || !exactPaths[chatId]) return;
+
+  const chat = await msg.getChat();
+
+  saveCacheToFile(
+    {
+      ...bot,
+      messages_counter: messagesCounter(),
+    },
+    DB_PATHS.BOT_SETTINGS
+  );
+
+  console.log(
+    formattedDate,
+    "msg.type =>",
+    msg.type,
+    "body =>",
+    msg.body,
+    "chatName",
+    chat.name
+  );
 
   const existingGroup = groupsQueue.find((group) => group.id === chatId);
 
@@ -141,14 +167,17 @@ async function sendMessagesFromGroups() {
 
     while (groupsQueue.length > 0) {
       const group = groupsQueue.shift();
-      await delay(60000);
+      await delay(120000);
       await processGroupMessages(group);
     }
 
     groupsQueueFlag = false;
 
     if (groupsQueue.length > 0) {
-      console.log('Осталось еще группы сообщений, увы, перезапускаюсь', groupsQueue.length)
+      console.log(
+        "Осталось еще группы сообщений, увы, перезапускаюсь",
+        groupsQueue.length
+      );
       sendMessagesFromGroups();
     }
 
