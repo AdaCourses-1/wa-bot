@@ -336,11 +336,12 @@ const botSettingsActions = async (msg) => {
       },
       []
     ).length;
+    const messagesCounter = bot.messages_counter || 0;
 
     try {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
-        `Имя: Dordoi Killer\nДата Создания: 05.08.2024\nКонфигурация Сервера: 3 CPU, 4GB RAM, 15GB SSD\nКоличество чатов куда рассылаются сообщения: ${botDestChatsCounter}\nКоличество чатов откуда берутся сообщения: ${botSourceChatsCounter}\n
+        `Имя: Dordoi Killer\nДата Создания: 05.08.2024\nКонфигурация Сервера: 3 CPU, 4GB RAM, 15GB SSD\nКоличество чатов куда рассылаются сообщения: ${botDestChatsCounter}\nКоличество чатов откуда берутся сообщения: ${botSourceChatsCounter}\nКоличество обработанных сообщений: ${messagesCounter}\n
         `
       );
     } catch (err) {

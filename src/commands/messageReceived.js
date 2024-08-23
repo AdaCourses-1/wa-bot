@@ -1,6 +1,6 @@
 const { onMessageCreated } = require("../controller");
 const { BOT_SETTINGS_GROUP, DB_PATHS } = require("../const");
-const { shouldBlockThread, exactPaths } = require("../utils");
+const { exactPaths } = require("../utils");
 const { debounce } = require("lodash");
 const { botSettingsActions } = require("../whatsapp-dordoi-bot/actions");
 const { CLIENT } = require("../config");
@@ -9,6 +9,7 @@ const { loadCacheFromFile, saveCacheToFile } = require("../saveGroups");
 let groupsQueue = [];
 let stopBot = false;
 let groupsQueueFlag = false;
+let messageQueueFlag = false
 
 const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
 
@@ -64,6 +65,8 @@ const addMessageToGroup = (group, message) => {
 const processGroupMessages = async (group) => {
   if (!group || !group.messages.length) return;
 
+  messageQueueFlag = true;
+
   while (group.messages.length > 0) {
     const messages = group.messages.shift();
 
@@ -73,6 +76,8 @@ const processGroupMessages = async (group) => {
 
     await delay(120000);
   }
+
+  messageQueueFlag = false
 };
 
 const messageReceived = async (msg) => {
@@ -156,7 +161,7 @@ const messageReceived = async (msg) => {
 
   debouncedMessages();
 };
-const debouncedMessages = debounce(sendMessagesFromGroups, 1200000);
+const debouncedMessages = debounce(sendMessagesFromGroups, 600000);
 
 async function sendMessagesFromGroups() {
   if (groupsQueueFlag) return;
@@ -166,8 +171,12 @@ async function sendMessagesFromGroups() {
     groupsQueueFlag = true;
 
     while (groupsQueue.length > 0) {
+      if (messageQueueFlag) {
+        await delay(15000);
+        continue;
+      }
       const group = groupsQueue.shift();
-      await delay(120000);
+      await delay(180000);
       await processGroupMessages(group);
     }
 
