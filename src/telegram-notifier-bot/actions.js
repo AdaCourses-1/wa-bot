@@ -3,7 +3,7 @@ const path = require("path");
 const qrcode = require("qrcode");
 
 const TELEGRAM_BOT_TOKEN = `7146727173:AAHTa_ZkUtBbMBYdEItPF3ZH8nsukUtpZEs`;
-const CHAT_ID = "-4557233673";
+const CHAT_ID = "-1002218886566";
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 
