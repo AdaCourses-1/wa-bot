@@ -9,9 +9,11 @@ const { loadCacheFromFile, saveCacheToFile } = require("../saveGroups");
 let groupsQueue = [];
 let stopBot = false;
 let groupsQueueFlag = false;
-let messageQueueFlag = false
+let messageQueueFlag = false;
 
 const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+
+const getMsFromMinutes = (ms) => ms * 60000;
 
 const messagesCounter = () => {
   if (bot.messages_counter) {
@@ -25,6 +27,10 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const addMessageToGroup = (group, message) => {
   const isText = !!message.body;
 
+  group.messages.push(message);
+  return;
+
+  // Testing
   // Получаем последнюю группу сообщений или создаем новую
   let lastGroup = group.messages[group.messages.length - 1];
 
@@ -74,10 +80,10 @@ const processGroupMessages = async (group) => {
       await onMessageCreated(message);
     }
 
-    await delay(180000);
+    await delay(getMsFromMinutes(2));
   }
 
-  messageQueueFlag = false
+  messageQueueFlag = false;
 };
 
 const messageReceived = async (msg) => {
@@ -161,7 +167,10 @@ const messageReceived = async (msg) => {
 
   debouncedMessages();
 };
-const debouncedMessages = debounce(sendMessagesFromGroups, 300000);
+const debouncedMessages = debounce(
+  sendMessagesFromGroups,
+  getMsFromMinutes(2)
+);
 
 async function sendMessagesFromGroups() {
   if (groupsQueueFlag) return;
@@ -172,12 +181,12 @@ async function sendMessagesFromGroups() {
 
     while (groupsQueue.length > 0) {
       if (messageQueueFlag) {
-        await delay(30000);
+        await delay(getMsFromMinutes(2));
         continue;
       }
       const group = groupsQueue.shift();
-      await delay(180000);
       await processGroupMessages(group);
+      await delay(getMsFromMinutes(5));
     }
 
     groupsQueueFlag = false;
