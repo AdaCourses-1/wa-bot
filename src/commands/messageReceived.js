@@ -150,7 +150,7 @@ const messageReceived = async (msg) => {
 };
 const debouncedMessages = debounce(
   sendMessagesFromGroups,
-  getMsFromMinutes(2)
+  getMsFromMinutes(20)
 );
 
 async function sendMessagesFromGroups() {
