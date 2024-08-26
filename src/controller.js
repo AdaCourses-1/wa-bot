@@ -97,18 +97,9 @@ const onMessageCreated = async (msg) => {
 
   timerId = setTimeout(() => {
     if (!isProcessing) {
-      messageQueue = reorderQueue(messageQueue)?.sort((a, b) => {
-        // Если `a` имеет `msg.body` и `b` не имеет, `a` должен идти позже
-        if (a.msg?.body && !b.msg?.body) return 1;
-      
-        // Если `a` не имеет `msg.body`, а `b` имеет, `b` должен идти позже
-        if (!a.msg?.body && b.msg?.body) return -1;
-      
-        // В противном случае порядок не меняется
-        return 0;
-      });
+      messageQueue = reorderQueue(messageQueue)
 
-      console.log(messageQueue)
+      console.log('messageQueue', messageQueue.length)
 
       processQueue();
     }
@@ -118,14 +109,11 @@ const onMessageCreated = async (msg) => {
 function reorderQueue(messageQueue) {
   // Разделяем элементы с msg.body и без него
   const withBody = messageQueue.filter((item) => item.msg?.body);
-  const withoutBody = messageQueue.filter((item) => !item.msg?.body);
-
-  // Извлекаем первый элемент с msg.body
-  const firstWithBody = withBody.shift();
+  const withoutBody = messageQueue.filter((item) => item.msg?.hasMedia);
 
   // Если есть хотя бы один элемент с msg.body, перемещаем его в конец
-  if (firstWithBody) {
-    return [...withoutBody, ...withBody, firstWithBody];
+  if (withBody.length > 0) {
+    return [...withoutBody, ...withBody];
   } else {
     const emptyMessage = {
       msg: {

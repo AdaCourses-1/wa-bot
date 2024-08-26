@@ -74,7 +74,7 @@ const processGroupMessages = async (group) => {
       await onMessageCreated(message);
     }
 
-    await delay(120000);
+    await delay(180000);
   }
 
   messageQueueFlag = false
@@ -161,7 +161,7 @@ const messageReceived = async (msg) => {
 
   debouncedMessages();
 };
-const debouncedMessages = debounce(sendMessagesFromGroups, 1800000);
+const debouncedMessages = debounce(sendMessagesFromGroups, 300000);
 
 async function sendMessagesFromGroups() {
   if (groupsQueueFlag) return;
@@ -172,7 +172,7 @@ async function sendMessagesFromGroups() {
 
     while (groupsQueue.length > 0) {
       if (messageQueueFlag) {
-        await delay(15000);
+        await delay(30000);
         continue;
       }
       const group = groupsQueue.shift();
