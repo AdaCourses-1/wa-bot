@@ -295,8 +295,8 @@ const botSettingsActions = async (msg) => {
 
     try {
       // Извлекаем chat_id1 и chat_id2
-      const chatId1 = lines[2].split(": ")[1]?.trim(); // 2 строка
-      const chatId2 = lines[3].split(": ")[1]?.trim(); // 3 строка
+      const chatId1 = lines[2].split(":")[1]?.trim(); // 2 строка
+      const chatId2 = lines[3].split(":")[1]?.trim(); // 3 строка
 
       const data = {
         ...bot,
