@@ -26,22 +26,17 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const addMessageToGroup = (group, message) => {
   const isText = !!message.body;
-
-  group.messages.push(message);
-  return;
-
-  // Testing
   // Получаем последнюю группу сообщений или создаем новую
-  let lastGroup = group.messages[group.messages.length - 1];
-
-  if (!lastGroup) {
-    lastGroup = [];
-    group.messages.push(lastGroup);
-  }
+  let lastGroup = group.messages.at(-1);
 
   // Проверяем, содержит ли последняя группа текстовые и медиа сообщения
   const containsText = lastGroup.some((msg) => !!msg.body);
   const containsMedia = lastGroup.some((msg) => msg.hasMedia);
+
+  if (lastGroup[0]?.type === "chat") {
+    lastGroup.unshift(message);
+    return;
+  }
 
   // Если последняя группа содержит и текстовые, и медиа сообщения
   // и новое сообщение текстовое, создаем новую группу
@@ -50,22 +45,8 @@ const addMessageToGroup = (group, message) => {
     return;
   }
 
-  // Добавляем сообщение в последнюю группу
   lastGroup.push(message);
 
-  // Проверяем, содержит ли последняя группа теперь текстовые и медиа сообщения
-  const updatedContainsText = lastGroup.some((msg) => !!msg.body);
-  const updatedContainsMedia = lastGroup.some((msg) => msg.hasMedia);
-
-  // Создаем новую группу только если предыдущая группа содержит и текстовые, и медиа сообщения
-  if (
-    containsText &&
-    containsMedia &&
-    ((updatedContainsText && !updatedContainsMedia) ||
-      (!updatedContainsText && updatedContainsMedia))
-  ) {
-    group.messages.push([]);
-  }
 };
 
 const processGroupMessages = async (group) => {
