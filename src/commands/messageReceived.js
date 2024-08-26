@@ -29,21 +29,21 @@ const addMessageToGroup = (group, message) => {
   // Получаем последнюю группу сообщений или создаем новую
   let lastGroup = group.messages.at(-1);
 
-  // Проверяем, содержит ли последняя группа текстовые и медиа сообщения
-  const containsText = lastGroup.some((msg) => !!msg.body);
-  const containsMedia = lastGroup.some((msg) => msg.hasMedia);
+  // // Проверяем, содержит ли последняя группа текстовые и медиа сообщения
+  // const containsText = lastGroup.some((msg) => !!msg.body);
+  // const containsMedia = lastGroup.some((msg) => msg.hasMedia);
 
-  if (lastGroup[0]?.type === "chat") {
-    lastGroup.unshift(message);
-    return;
-  }
+  // if (lastGroup[0]?.type === "chat") {
+  //   lastGroup.unshift(message);
+  //   return;
+  // }
 
-  // Если последняя группа содержит и текстовые, и медиа сообщения
-  // и новое сообщение текстовое, создаем новую группу
-  if (containsText && containsMedia && isText) {
-    group.messages.push([message]);
-    return;
-  }
+  // // Если последняя группа содержит и текстовые, и медиа сообщения
+  // // и новое сообщение текстовое, создаем новую группу
+  // if (containsText && containsMedia && isText) {
+  //   group.messages.push([message]);
+  //   return;
+  // }
 
   lastGroup.push(message);
 

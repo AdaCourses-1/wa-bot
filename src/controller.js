@@ -97,7 +97,7 @@ const onMessageCreated = async (msg) => {
 
   timerId = setTimeout(() => {
     if (!isProcessing) {
-      messageQueue = reorderQueue(messageQueue)
+      // messageQueue = reorderQueue(messageQueue)
 
       console.log('messageQueue', messageQueue.length)
 
