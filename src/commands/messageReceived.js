@@ -150,13 +150,13 @@ const messageReceived = async (msg) => {
 };
 const debouncedMessages = debounce(
   sendMessagesFromGroups,
-  getMsFromMinutes(20)
+  getMsFromMinutes(10)
 );
 
 async function sendMessagesFromGroups() {
   if (groupsQueueFlag) return;
   try {
-    console.log("Начал обработку групп сообщений");
+    await CLIENT.sendMessage(BOT_SETTINGS_GROUP.ID, "Начал обработку групп сообщений")
 
     groupsQueueFlag = true;
 
@@ -180,7 +180,7 @@ async function sendMessagesFromGroups() {
       sendMessagesFromGroups();
     }
 
-    console.log("groupsQueue", groupsQueue.length);
+    await CLIENT.sendMessage(BOT_SETTINGS_GROUP.ID, "Завершил обратку групп сообщений, оставшаяся длина группы: " + groupsQueue.length)
   } catch (err) {
     console.error("Ошибка получения чата:", err);
   }
