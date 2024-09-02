@@ -138,7 +138,7 @@ async function sendMessagesFromGroups() {
   if (groupsQueueFlag) return;
   try {
     const totalMessagesFromAllGroups = groupsQueue.reduce(
-      (acc, group) => acc + group.messages.length,
+      (acc, group) => acc + group.messages.at(-1)?.length,
       0
     );
     await CLIENT.sendMessage(
