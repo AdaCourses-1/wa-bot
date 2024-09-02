@@ -1,5 +1,5 @@
 const { onMessageCreated } = require("../controller");
-const { BOT_SETTINGS_GROUP, DB_PATHS } = require("../const");
+const { BOT_SETTINGS_GROUP } = require("../const");
 const { exactPaths } = require("../utils");
 const { debounce } = require("lodash");
 const { botSettingsActions } = require("../whatsapp-dordoi-bot/actions");
@@ -36,7 +36,6 @@ const addMessageToGroup = (group, message) => {
   // }
 
   lastGroup.push(message);
-
 };
 
 const processGroupMessages = async (group) => {
@@ -138,7 +137,14 @@ const debouncedMessages = debounce(
 async function sendMessagesFromGroups() {
   if (groupsQueueFlag) return;
   try {
-    await CLIENT.sendMessage(BOT_SETTINGS_GROUP.ID, "Начал обработку групп сообщений")
+    const totalMessagesFromAllGroups = groupsQueue.reduce(
+      (acc, group) => acc + group.messages.length,
+      0
+    );
+    await CLIENT.sendMessage(
+      BOT_SETTINGS_GROUP.ID,
+      `Начал обработку групп сообщений\n\n Количество собранных групп: ${groupsQueue.length}\n Количество собранных сообщений: ${totalMessagesFromAllGroups}`
+    );
 
     groupsQueueFlag = true;
 
@@ -155,14 +161,18 @@ async function sendMessagesFromGroups() {
     groupsQueueFlag = false;
 
     if (groupsQueue.length > 0) {
-      console.log(
-        "Осталось еще группы сообщений, увы, перезапускаюсь",
-        groupsQueue.length
+      await CLIENT.sendMessage(
+        BOT_SETTINGS_GROUP.ID,
+        "Во время рассылки поступили новые сообщения, перезапускаюсь для продолжения"
       );
-      sendMessagesFromGroups();
+      return sendMessagesFromGroups();
     }
 
-    await CLIENT.sendMessage(BOT_SETTINGS_GROUP.ID, "Завершил обратку групп сообщений, оставшаяся длина группы: " + groupsQueue.length)
+    await CLIENT.sendMessage(
+      BOT_SETTINGS_GROUP.ID,
+      "Завершил обратку всех групп и сообщений, состояние очереди: " +
+        groupsQueue.length
+    );
   } catch (err) {
     console.error("Ошибка получения чата:", err);
   }

@@ -1,5 +1,9 @@
 const { CLIENT } = require("./config");
-const { BOT_HISTORY_GROUP, BOT_SETTINGS_GROUP, GROUP_DIVIDER } = require("./const");
+const {
+  BOT_HISTORY_GROUP,
+  BOT_SETTINGS_GROUP,
+  GROUP_DIVIDER,
+} = require("./const");
 const {
   exactPaths,
   generateUniqueId,
@@ -7,6 +11,7 @@ const {
   isVideoOrImage,
   sanitizeMessage,
   removeLinksFromText,
+  getFormattedDate,
 } = require("./utils");
 
 let messageQueue = [];
@@ -25,10 +30,13 @@ const sendToDestChats = async (data, chat, msg) => {
   }
 
   for (const destChatId of exactPaths[currentSourceChatId]) {
-    if (prevChatName !== chat.name) {
-      prevChatName = chat.name;
+    if (prevChatName && prevChatName !== chat.name) {
       await CLIENT.sendMessage(destChatId, GROUP_DIVIDER);
-      await CLIENT.sendMessage(BOT_HISTORY_GROUP.ID, GROUP_DIVIDER);
+      await CLIENT.sendMessage(
+        BOT_HISTORY_GROUP.ID,
+        `Закончил рассылать: ${prevChatName}\nКогда: ${getFormattedDate()}\n${GROUP_DIVIDER}\nНачал рассылать: ${chat.name}\nКогда: ${getFormattedDate()}`
+      );
+      prevChatName = chat.name;
     }
     await CLIENT.sendMessage(destChatId, data);
   }
@@ -109,7 +117,7 @@ const onMessageCreated = async (msg) => {
     if (!isProcessing) {
       // messageQueue = reorderQueue(messageQueue)
 
-      console.log('messageQueue', messageQueue.length)
+      console.log("messageQueue", messageQueue.length);
 
       processQueue();
     }
