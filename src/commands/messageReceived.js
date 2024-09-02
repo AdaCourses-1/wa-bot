@@ -4,23 +4,13 @@ const { exactPaths } = require("../utils");
 const { debounce } = require("lodash");
 const { botSettingsActions } = require("../whatsapp-dordoi-bot/actions");
 const { CLIENT } = require("../config");
-const { loadCacheFromFile, saveCacheToFile } = require("../saveGroups");
 
 let groupsQueue = [];
 let stopBot = false;
 let groupsQueueFlag = false;
 let messageQueueFlag = false;
 
-const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
-
 const getMsFromMinutes = (ms) => ms * 60000;
-
-const messagesCounter = () => {
-  if (bot.messages_counter) {
-    return ++bot.messages_counter;
-  }
-  return 1;
-};
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -118,14 +108,6 @@ const messageReceived = async (msg) => {
   if (!exactPaths || !exactPaths[chatId]) return;
 
   const chat = await msg.getChat();
-
-  saveCacheToFile(
-    {
-      ...bot,
-      messages_counter: messagesCounter(),
-    },
-    DB_PATHS.BOT_SETTINGS
-  );
 
   console.log(
     formattedDate,
