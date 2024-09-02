@@ -42,7 +42,7 @@ const COMMANDS = {
   GET_EXACT_PATHS: "Получить откуда и куда",
   DELETE_EXACT_PATHS: "Удалить группы откуда и куда",
   CLEAR_EXACT_PATHS: "Удалить все группы откуда и куда",
-  ADD_ALL_GROUPS: "Добавить все группы!"
+  ADD_ALL_GROUPS: "Добавить все группы!",
 };
 
 const KEYWORDS_TO_REMOVE = [
@@ -93,6 +93,7 @@ const KEYWORDS_TO_REMOVE = [
 ];
 
 const LINKS_TO_REMOVE = ["https", "http", "wa.me", "t.me"];
+const GROUP_DIVIDER = `❗❗❗❗❗❗❗❗❗❗`;
 
 module.exports = {
   CLIENT_EVENTS,
@@ -101,5 +102,6 @@ module.exports = {
   DB_PATHS,
   KEYWORDS_TO_REMOVE,
   LINKS_TO_REMOVE,
-  BOT_HISTORY_GROUP
+  BOT_HISTORY_GROUP,
+  GROUP_DIVIDER
 };

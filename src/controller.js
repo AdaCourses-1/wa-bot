@@ -1,5 +1,5 @@
 const { CLIENT } = require("./config");
-const { BOT_HISTORY_GROUP, BOT_SETTINGS_GROUP } = require("./const");
+const { BOT_HISTORY_GROUP, BOT_SETTINGS_GROUP, GROUP_DIVIDER } = require("./const");
 const {
   exactPaths,
   generateUniqueId,
@@ -11,6 +11,7 @@ const {
 
 let messageQueue = [];
 let isProcessing = false;
+let prevChatName = null;
 
 const sendToDestChats = async (data, chat, msg) => {
   if (exactPaths && Object.keys(exactPaths).length < 1) return;
@@ -19,7 +20,16 @@ const sendToDestChats = async (data, chat, msg) => {
 
   if (!exactPaths[currentSourceChatId]) return;
 
+  if (!prevChatName) {
+    prevChatName = chat.name;
+  }
+
   for (const destChatId of exactPaths[currentSourceChatId]) {
+    if (prevChatName !== chat.name) {
+      prevChatName = chat.name;
+      await CLIENT.sendMessage(destChatId, GROUP_DIVIDER);
+      await CLIENT.sendMessage(BOT_HISTORY_GROUP.ID, GROUP_DIVIDER);
+    }
     await CLIENT.sendMessage(destChatId, data);
   }
 
