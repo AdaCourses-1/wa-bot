@@ -30,7 +30,7 @@ const sendToDestChats = async (data, chat, msg) => {
   }
 
   for (const destChatId of exactPaths[currentSourceChatId]) {
-    if (prevChatName && prevChatName !== chat.name) {
+    if (prevChatName !== chat.name) {
       await CLIENT.sendMessage(destChatId, GROUP_DIVIDER);
       await CLIENT.sendMessage(
         BOT_HISTORY_GROUP.ID,

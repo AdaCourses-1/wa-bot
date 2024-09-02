@@ -128,6 +128,7 @@ const messageReceived = async (msg) => {
   }
 
   debouncedMessages();
+  await chat.sendSeen()
 };
 const debouncedMessages = debounce(
   sendMessagesFromGroups,
