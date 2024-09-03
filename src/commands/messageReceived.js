@@ -146,15 +146,15 @@ async function sendMessagesFromGroups() {
     const totalGroupNames = groupsQueue.reduce((acc, group) => {
       return (
         acc +
-        `Название: ${group.name} - Сообщений: ${
+        `Название: ${group.name}\nСообщений: ${
           group.messages.at(-1)?.length
-        }\n`
+        }\n\n`
       );
     }, ``);
 
     await CLIENT.sendMessage(
       BOT_SETTINGS_GROUP.ID,
-      `Начал обработку групп сообщений\n\n ${totalGroupNames}Всего сообщений: ${totalMessagesFromAllGroups}`
+      `Начал обработку групп сообщений\n\n${totalGroupNames}\n\nВсего сообщений: ${totalMessagesFromAllGroups}`
     );
 
     groupsQueueFlag = true;
@@ -179,20 +179,13 @@ async function sendMessagesFromGroups() {
       return sendMessagesFromGroups();
     }
 
-    exec("pm2 restart bots", async (error) => {
-      if (error) {
-        await CLIENT.sendMessage(
-          BOT_SETTINGS_GROUP.ID,
-          "Ошибка перезапуска: " + error
-        );
-        return;
-      }
-      await CLIENT.sendMessage(
-        BOT_SETTINGS_GROUP.ID,
-        "Успешно провёл очистку памяти и перезапуск процессов, состояние очереди" +
-          groupsQueue.length
-      );
-    });
+    await CLIENT.sendMessage(
+      BOT_SETTINGS_GROUP.ID,
+      "Запускаю процесс очистки памяти и перезапускаю процесс очередей, текущее состояние очереди" +
+        groupsQueue.length
+    );
+
+    exec("pm2 restart bots");
   } catch (err) {
     console.error("Ошибка получения чата:", err);
   }
