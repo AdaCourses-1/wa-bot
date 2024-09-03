@@ -4,6 +4,7 @@ const { exactPaths } = require("../utils");
 const { debounce } = require("lodash");
 const { botSettingsActions } = require("../whatsapp-dordoi-bot/actions");
 const { CLIENT } = require("../config");
+const { exec } = require("child_process");
 
 let groupsQueue = [];
 let stopBot = false;
@@ -123,12 +124,12 @@ const messageReceived = async (msg) => {
   if (existingGroup) {
     addMessageToGroup(existingGroup, msg);
   } else {
-    const newGroup = { id: chatId, messages: [[msg]] };
+    const newGroup = { id: chatId, messages: [[msg]], name: chat.name };
     groupsQueue.push(newGroup);
   }
 
   debouncedMessages();
-  await chat.sendSeen()
+  await chat.sendSeen();
 };
 const debouncedMessages = debounce(
   sendMessagesFromGroups,
@@ -142,9 +143,18 @@ async function sendMessagesFromGroups() {
       (acc, group) => acc + group.messages.at(-1)?.length,
       0
     );
+    const totalGroupNames = groupsQueue.reduce((acc, group) => {
+      return (
+        acc +
+        `Название: ${group.name} - Сообщений: ${
+          group.messages.at(-1)?.length
+        }\n`
+      );
+    }, ``);
+
     await CLIENT.sendMessage(
       BOT_SETTINGS_GROUP.ID,
-      `Начал обработку групп сообщений\n\n Количество собранных групп: ${groupsQueue.length}\n Количество собранных сообщений: ${totalMessagesFromAllGroups}`
+      `Начал обработку групп сообщений\n\n ${totalGroupNames}Всего сообщений: ${totalMessagesFromAllGroups}`
     );
 
     groupsQueueFlag = true;
@@ -156,7 +166,7 @@ async function sendMessagesFromGroups() {
       }
       const group = groupsQueue.shift();
       await processGroupMessages(group);
-      await delay(getMsFromMinutes(5));
+      await delay(getMsFromMinutes(2));
     }
 
     groupsQueueFlag = false;
@@ -169,11 +179,20 @@ async function sendMessagesFromGroups() {
       return sendMessagesFromGroups();
     }
 
-    await CLIENT.sendMessage(
-      BOT_SETTINGS_GROUP.ID,
-      "Завершил обратку всех групп и сообщений, состояние очереди: " +
-        groupsQueue.length
-    );
+    exec("pm2 restart bots", async (error) => {
+      if (error) {
+        await CLIENT.sendMessage(
+          BOT_SETTINGS_GROUP.ID,
+          "Ошибка перезапуска: " + error
+        );
+        return;
+      }
+      await CLIENT.sendMessage(
+        BOT_SETTINGS_GROUP.ID,
+        "Успешно провёл очистку памяти и перезапуск процессов, состояние очереди" +
+          groupsQueue.length
+      );
+    });
   } catch (err) {
     console.error("Ошибка получения чата:", err);
   }
