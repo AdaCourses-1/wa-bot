@@ -62,6 +62,9 @@ const removeLinksFromText = (body) => {
 const getFormattedDate = () => {
   const now = new Date();
 
+  // Добавляем 6 часов к времени сервера, чтобы получить время по Кыргызстану
+  now.setHours(now.getUTCHours() + 6);
+
   const seconds = String(now.getSeconds()).padStart(2, '0');
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const hours = String(now.getHours()).padStart(2, '0');
@@ -70,7 +73,7 @@ const getFormattedDate = () => {
   const month = String(now.getMonth() + 1).padStart(2, '0'); // Месяцы в JS считаются с 0
   const year = now.getFullYear();
 
-  return `${seconds}:${minutes}:${hours} ${day}.${month}.${year}`;
+  return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
 }
 
 module.exports = {
