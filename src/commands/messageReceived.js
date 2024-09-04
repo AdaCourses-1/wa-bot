@@ -9,7 +9,6 @@ const { exec } = require("child_process");
 let groupsQueue = [];
 let stopBot = false;
 let groupsQueueFlag = false;
-let messageQueueFlag = false;
 
 const getMsFromMinutes = (ms) => ms * 60000;
 
@@ -42,8 +41,6 @@ const addMessageToGroup = (group, message) => {
 const processGroupMessages = async (group) => {
   if (!group || !group.messages.length) return;
 
-  messageQueueFlag = true;
-
   while (group.messages.length > 0) {
     const messages = group.messages.shift();
 
@@ -53,8 +50,6 @@ const processGroupMessages = async (group) => {
 
     await delay(getMsFromMinutes(2));
   }
-
-  messageQueueFlag = false;
 };
 
 const messageReceived = async (msg) => {
@@ -160,10 +155,6 @@ async function sendMessagesFromGroups() {
     groupsQueueFlag = true;
 
     while (groupsQueue.length > 0) {
-      if (messageQueueFlag) {
-        await delay(getMsFromMinutes(2));
-        continue;
-      }
       const group = groupsQueue.shift();
       await processGroupMessages(group);
       await delay(getMsFromMinutes(2));
@@ -181,7 +172,7 @@ async function sendMessagesFromGroups() {
 
     await CLIENT.sendMessage(
       BOT_SETTINGS_GROUP.ID,
-      "Запускаю процесс очистки памяти и перезапускаю процесс очередей, текущее состояние очереди" +
+      "Запускаю процесс очистки памяти и перезапускаю процесс очередей, текущее состояние очереди -" +
         groupsQueue.length
     );
 

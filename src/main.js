@@ -34,7 +34,7 @@ const listGroups = async () => {
 
 // When the CLIENT is ready, run this code (only once)
 CLIENT.once(CLIENT_EVENTS.READY, async () => {
-  listGroups();
+  // listGroups();
   await whatsAppBotReady?.();
 });
 
