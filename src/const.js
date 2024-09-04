@@ -1,4 +1,5 @@
 const { Events } = require("whatsapp-web.js");
+const { loadCacheFromFile } = require("./saveGroups");
 
 const CLIENT_EVENTS = {
   MESSAGE_CREATE: Events.MESSAGE_CREATE,
@@ -45,7 +46,7 @@ const COMMANDS = {
   ADD_ALL_GROUPS: "Добавить все группы!",
 };
 
-const KEYWORDS_TO_REMOVE = [
+const KEYWORDS_TO_REMOVE = loadCacheFromFile(DB_PATHS.BOT_SETTINGS)?.keywords_to_remove || [
   "+996709917944",
   "+996 709 917 944",
   "+996707922-584",
@@ -89,7 +90,7 @@ const KEYWORDS_TO_REMOVE = [
   "Меркурий",
   "Брючный",
   "адрес",
-  "адр.",
+  "адр."
 ];
 
 const LINKS_TO_REMOVE = ["https", "http", "wa.me", "t.me"];

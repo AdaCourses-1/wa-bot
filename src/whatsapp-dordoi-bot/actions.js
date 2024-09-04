@@ -7,6 +7,7 @@ const {
   BOT_HISTORY_GROUP,
 } = require("../const");
 const { loadCacheFromFile, saveCacheToFile } = require("../saveGroups");
+const { exec } = require("child_process");
 
 const botSettingsActions = async (msg) => {
   const command = await msg.body;
@@ -90,6 +91,33 @@ const botSettingsActions = async (msg) => {
     }
     return;
   }
+
+  if (command.includes(COMMANDS.ADD_KEYWORDS)) {
+    const bot = loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
+    const keywordIndex = command.indexOf(COMMANDS.ADD_KEYWORDS);
+
+    try {
+      const keywordsPart = command.slice(keywordIndex + "Добавить ключевые слова:".length).trim();
+
+      // Разбиваем текст на строки по каждому новому слову или значку новой строки
+      const keywordsArray = keywordsPart.split(/\r?\n/).filter(line => line.trim() !== "");
+
+      // Удаляем дубликаты
+      const newKeywords = keywordsArray.filter(key => !bot.keywords_to_remove.includes(key));
+
+      const data = {
+        ...bot,
+        keywords_to_remove: [...bot.keywords_to_remove, ...newKeywords],
+      };
+
+      saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
+      await CLIENT.sendMessage(BOT_SETTINGS_GROUP.ID, `Добавление новых ключевых слов прошло успешно!\n\nПопробуйте получить список ключевых слов, чтобы увидеть результат.`);
+      exec("pm2 restart bots");
+    } catch (err) {
+      await CLIENT.sendMessage(BOT_SETTINGS_GROUP.ID, `Не получилось добавить новые ключевые слова по причине: ${err.message}`);
+    }
+  }
+
 
   if (command.includes(COMMANDS.GET_ADDED_GROUPS)) {
     const chats = await CLIENT.getChats();
@@ -179,6 +207,7 @@ const botSettingsActions = async (msg) => {
         BOT_SETTINGS_GROUP.ID,
         `Успешно добавил 2 группы!\n\nТеперь товары будут браться конкретно из группы ${newExactPath.source_chat} и добавляться конкретно в группу ${newExactPath.dest_chat}`
       );
+      exec("pm2 restart bots");
     } catch (err) {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
@@ -246,6 +275,7 @@ const botSettingsActions = async (msg) => {
         BOT_SETTINGS_GROUP.ID,
         `Все группы куда и откуда скидываются товары были удалены!`
       );
+      exec("pm2 restart bots");
     } catch (err) {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
@@ -253,40 +283,6 @@ const botSettingsActions = async (msg) => {
       );
     }
   }
-
-  // depreceated
-  // if (command.includes(COMMANDS.ADD_ALL_GROUPS)) {
-  //   const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
-
-  //   const chats = await CLIENT.getChats();
-
-  //   let data = {
-  //     exact_paths: {
-  //       ...bot.exact_paths,
-  //     },
-  //   };
-
-  //   try {
-  //     chats.forEach((chat) => {
-  //       if (chat.isGroup) {
-  //         data.exact_paths[chat.id._serialized] = [
-  //           "120363322029251331@g.us",
-  //           "120363303809348412@g.us",
-  //         ];
-  //       }
-  //     });
-  //     saveCacheToFile(data, DB_PATHS.BOT_SETTINGS);
-  //     await CLIENT.sendMessage(
-  //       BOT_SETTINGS_GROUP.ID,
-  //       `Добавил все группы, это было жестко!`
-  //     );
-  //   } catch (err) {
-  //     await CLIENT.sendMessage(
-  //       BOT_SETTINGS_GROUP.ID,
-  //       `Не удалось добавить все группы по причине:\n\n${err.message}`
-  //     );
-  //   }
-  // }
 
   if (command.includes(COMMANDS.DELETE_EXACT_PATHS)) {
     const bot = await loadCacheFromFile(DB_PATHS.BOT_SETTINGS);
@@ -312,6 +308,7 @@ const botSettingsActions = async (msg) => {
         BOT_SETTINGS_GROUP.ID,
         `Успешно удалил группы!\n\nТеперь товары НЕ будут браться конкретно из группы ${chatId1} и добавляться конкретно в группу ${chatId2}`
       );
+      exec("pm2 restart bots");
     } catch (err) {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
@@ -336,12 +333,11 @@ const botSettingsActions = async (msg) => {
       },
       []
     ).length;
-    const messagesCounter = bot.messages_counter || 1;
 
     try {
       await CLIENT.sendMessage(
         BOT_SETTINGS_GROUP.ID,
-        `Имя: Dordoi Killer\nДата Создания: 05.08.2024\nКонфигурация Сервера: 3 CPU, 4GB RAM, 15GB SSD\nКоличество чатов куда рассылаются сообщения: ${botDestChatsCounter}\nКоличество чатов откуда берутся сообщения: ${botSourceChatsCounter}\nКоличество обработанных сообщений: ${messagesCounter}\n`
+        `Имя: Dordoi Killer\nДата Создания: 05.08.2024\nКонфигурация Сервера: 3 CPU, 4GB RAM, 15GB SSD\nКоличество чатов куда рассылаются сообщения: ${botDestChatsCounter}\nКоличество чатов откуда берутся сообщения: ${botSourceChatsCounter}`
       );
     } catch (err) {
       await CLIENT.sendMessage(
