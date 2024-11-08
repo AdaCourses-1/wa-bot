@@ -31,10 +31,11 @@ const sendToDestChats = async (data, chat, msg) => {
 
   for (const destChatId of exactPaths[currentSourceChatId]) {
     if (prevChatName !== chat.name) {
+      console.log('Условие сработало =>', prevChatName !== chat.name)
       await CLIENT.sendMessage(destChatId, GROUP_DIVIDER);
       await CLIENT.sendMessage(
         BOT_HISTORY_GROUP.ID,
-        `Закончил рассылать: ${prevChatName}\nКогда: ${getFormattedDate()}\n${GROUP_DIVIDER}\nНачал рассылать: ${chat.name}\nКогда: ${getFormattedDate()}`
+        `Закончил рассылать: ${prevChatName}\nКогда: ${getFormattedDate() ?? 'Ошибка с датой'}\n${GROUP_DIVIDER}\nНачал рассылать: ${chat.name}\nКогда: ${getFormattedDate() ?? 'Ошибка с датой'}`
       );
       prevChatName = chat.name;
     }
@@ -61,8 +62,7 @@ const processQueue = async () => {
     isProcessing = false;
     await CLIENT.sendMessage(
       BOT_SETTINGS_GROUP.ID,
-      `Данное сообщение не было доставлено клиентам по так как не было информации про CHAT и про MESSAGE\n\nКонтекст: message - ${msg}\nchat: ${
-        chat ? chat.name : chat
+      `Данное сообщение не было доставлено клиентам по так как не было информации про CHAT и про MESSAGE\n\nКонтекст: message - ${msg}\nchat: ${chat ? chat.name : chat
       }`
     );
     return;
@@ -116,8 +116,6 @@ const onMessageCreated = async (msg) => {
   timerId = setTimeout(() => {
     if (!isProcessing) {
       // messageQueue = reorderQueue(messageQueue)
-
-      console.log("messageQueue", messageQueue.length);
 
       processQueue();
     }

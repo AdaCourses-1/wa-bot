@@ -5,6 +5,7 @@ const { debounce } = require("lodash");
 const { botSettingsActions } = require("../whatsapp-dordoi-bot/actions");
 const { CLIENT } = require("../config");
 const { exec } = require("child_process");
+const { WAState } = require("whatsapp-web.js");
 
 let groupsQueue = [];
 let stopBot = false;
@@ -41,14 +42,23 @@ const addMessageToGroup = (group, message) => {
 const processGroupMessages = async (group) => {
   if (!group || !group.messages.length) return;
 
+
   while (group.messages.length > 0) {
     const messages = group.messages.shift();
 
-    for (const message of messages) {
-      await onMessageCreated(message);
-    }
+    while (messages.length > 0) {
+      const state = await CLIENT.getState();
 
-    await delay(getMsFromMinutes(2));
+      if (state !== "CONNECTED") {
+        await delay(5000);
+        continue;
+      }
+      
+      const message = messages.shift();
+
+      await onMessageCreated(message);
+      await delay(5000)
+    }
   }
 };
 
@@ -157,7 +167,7 @@ async function sendMessagesFromGroups() {
     while (groupsQueue.length > 0) {
       const group = groupsQueue.shift();
       await processGroupMessages(group);
-      await delay(getMsFromMinutes(2));
+      await delay(getMsFromMinutes(3));
     }
 
     groupsQueueFlag = false;
@@ -175,6 +185,8 @@ async function sendMessagesFromGroups() {
       "Запускаю процесс очистки памяти и перезапускаю процесс очередей, текущее состояние очереди -" +
         groupsQueue.length
     );
+
+    console.log('Обработка полностью завершена!')
 
     exec("pm2 restart bots");
   } catch (err) {

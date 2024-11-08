@@ -61,21 +61,24 @@ const removeLinksFromText = (body) => {
 
 const getFormattedDate = () => {
   const now = new Date();
+  console.log('Current UTC time:', now);
 
   // Добавляем 6 часов к времени сервера, чтобы получить время по Кыргызстану
   now.setHours(now.getUTCHours() + 6);
+  console.log('Time after adding 6 hours:', now);
 
   const seconds = String(now.getSeconds()).padStart(2, '0');
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const hours = String(now.getHours()).padStart(2, '0');
+  console.log('Formatted time:', hours, minutes, seconds);
 
   const day = String(now.getDate()).padStart(2, '0');
   const month = String(now.getMonth() + 1).padStart(2, '0'); // Месяцы в JS считаются с 0
   const year = now.getFullYear();
+  console.log('Formatted date:', day, month, year);
 
   return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
 }
-
 module.exports = {
   destChats,
   sourceChats,
